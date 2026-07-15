@@ -29,7 +29,8 @@ const CHECKLISTS = [
   {
     title: "2 · SYSTEMS",
     items: [
-      ["Spotify", "ON"],
+      ["Landscape", "SET"],
+      ["Spotify", "PLAY/PAUSE"],
       ["Zello", "ON"],
       ["Helmet PTT", "-"],
       ["Zello", "PTT-Z Connected"],
@@ -50,7 +51,7 @@ const CHECKLISTS = [
   {
     title: "4 · XCTRACK",
     items: [
-      ["XC Tracer", "ON"],
+      ["XC Tracer", "ON / 5X"],
       ["XC Tracer", "CONNECTED"],
       ["Task", "SET"],
       ["Airspace", "ACTIVATED"],
