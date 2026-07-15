@@ -5,9 +5,10 @@ paragliding, built to be displayed inside **XCTrack**'s web-page widget on a
 landscape phone (designed on a Samsung S22 Ultra, widget taking ~2/3 of the
 screen width, XCTrack's own widgets filling the rest).
 
-- **5 pre-flight checklist pages** — ticking an item advances the amber
-  "active item" cursor to the next one, airliner-checklist style. Completing
-  a page auto-advances to the next checklist. Fully customisable.
+- **Pre-flight checklist pages** in challenge–response format
+  (`Battery ···· 100%`) — ticking an item advances the amber "active item"
+  cursor to the next one, airliner-checklist style. Completing a page
+  auto-advances to the next checklist. Fully customisable.
 - **▲ / ▼ buttons** cycle through all pages (checklists → flight data → music).
 - **FLIGHT DATA page** — local/UTC clock, stopwatch timer, GPS altitude /
   speed / heading (from the phone's GPS, works offline), battery in the header.
@@ -67,8 +68,9 @@ request; when offline the bar shows `OFFLINE — NO MUSIC CONTROL`).
 
 ## Customising the checklists
 
-Edit [`js/checklists.js`](js/checklists.js) — plain text, one array entry per
-page. Add or remove pages/items freely; the page dots, cycling and
+Edit [`js/checklists.js`](js/checklists.js) — one array entry per page; each
+item is `["Challenge", "RESPONSE"]` (or a plain string for a simple line).
+Add or remove pages/items freely; the page dots, cycling and
 auto-advance adapt. Changing a page's item count intentionally resets that
 page's saved ticks. After deploying changes, bump `CACHE_VERSION` in
 [`sw.js`](sw.js) so cached clients pick up the new version next time they're

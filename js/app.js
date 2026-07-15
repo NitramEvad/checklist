@@ -149,11 +149,16 @@
         <button class="minibtn" id="resetPage">RESET</button>
       </div>
       <ul class="cl">
-        ${p.items.map((it, i) => `
+        ${p.items.map((it, i) => {
+          // item is either "text" or ["Challenge", "RESPONSE"]
+          const [lbl, resp] = Array.isArray(it) ? it : [it, ''];
+          return `
           <li class="${chk[i] ? 'done' : (i === act ? 'active' : '')}" data-i="${i}">
             <span class="box">${chk[i] ? '✓' : (i === act ? '▶' : '')}</span>
-            <span class="lbl">${esc(it)}</span>
-          </li>`).join('')}
+            <span class="lbl">${esc(lbl)}</span>
+            ${resp ? `<span class="leader"></span><span class="resp">${esc(resp)}</span>` : ''}
+          </li>`;
+        }).join('')}
       </ul>`;
     c.querySelectorAll('li').forEach(li =>
       li.addEventListener('click', () => toggleItem(pi, Number(li.dataset.i))));

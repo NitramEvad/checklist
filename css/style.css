@@ -195,7 +195,26 @@ ul.cl li .lbl {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex-shrink: 1;
 }
+
+/* challenge–response layout: Challenge ········ RESPONSE */
+ul.cl li .leader {
+  flex: 1;
+  min-width: 0.8em;
+  border-bottom: 3px dotted var(--line);
+  align-self: center;
+  transform: translateY(0.25em);
+  margin: 0 0.45em;
+}
+ul.cl li .resp {
+  white-space: nowrap;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--cyn);
+}
+ul.cl li.active .resp { color: var(--amb); }
+ul.cl li.done   .resp { color: var(--grn); }
 
 ul.cl li.done { color: var(--grn); }
 ul.cl li.done .box { border-color: var(--grn); color: var(--grn); }

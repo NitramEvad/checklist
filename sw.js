@@ -9,7 +9,7 @@
 //  to swap to the fresh cache on their next online visit.
 // ============================================================
 
-const CACHE_VERSION = 'pfc-v1';
+const CACHE_VERSION = 'pfc-v2';
 
 const ASSETS = [
   './',
