@@ -150,13 +150,15 @@
       </div>
       <ul class="cl">
         ${p.items.map((it, i) => {
-          // item is either "text" or ["Challenge", "RESPONSE"]
-          const [lbl, resp] = Array.isArray(it) ? it : [it, ''];
+          // item is "text" | ["Challenge","RESPONSE"] | ["Challenge","RESPONSE","live"]
+          const [lbl, resp, live] = Array.isArray(it) ? it : [it, '', ''];
           return `
           <li class="${chk[i] ? 'done' : (i === act ? 'active' : '')}" data-i="${i}">
             <span class="box">${chk[i] ? '✓' : (i === act ? '▶' : '')}</span>
             <span class="lbl">${esc(lbl)}</span>
-            ${resp ? `<span class="leader"></span><span class="resp">${esc(resp)}</span>` : ''}
+            ${resp ? `<span class="leader"></span>
+              ${live ? `<span class="live" data-live="${esc(live)}">—</span>` : ''}
+              <span class="resp">${esc(resp)}</span>` : ''}
           </li>`;
         }).join('')}
       </ul>`;
@@ -166,6 +168,16 @@
       state.checks[pi] = p.items.map(() => false);
       save();
       render();
+    });
+    updateLiveItems();
+  }
+
+  // Refresh every live reading currently on screen (battery %, charging…).
+  function updateLiveItems() {
+    document.querySelectorAll('#content [data-live]').forEach(el => {
+      const v = Live.value(el.dataset.live);
+      el.textContent = v ? v.text : '—';
+      el.classList.toggle('ok', !!(v && v.ok));
     });
   }
 
@@ -181,8 +193,8 @@
           </div>
         </div>
         <div class="tile"><div class="tl">ALT GPS</div><div class="tv" id="dAlt">—</div></div>
-        <div class="tile"><div class="tl">SPEED</div><div class="tv" id="dSpd">—</div></div>
-        <div class="tile"><div class="tl">HEADING</div><div class="tv" id="dHdg">—</div></div>
+        <div class="tile" id="tileQnh"><div class="tl">QNH ⤶</div><div class="tv" id="dQnh">—</div></div>
+        <div class="tile"><div class="tl">TEMP</div><div class="tv" id="dTemp">—</div></div>
       </div>
       <div class="drow">
         <span class="dim" id="dGps">GPS: waiting for fix…</span>
@@ -212,26 +224,35 @@
       renderDots();
       toast('ALL CHECKLISTS RESET');
     });
+    // Tap the QNH tile to set it by hand (like winding an altimeter);
+    // blank clears the manual value and returns to the auto weather reading.
+    $('#tileQnh').addEventListener('click', () => {
+      const cur = Weather.qnh();
+      const v = prompt('QNH (hPa) — leave blank for automatic:', cur == null ? '' : cur);
+      if (v === null) return;
+      Weather.setManualQnh(v.trim() === '' ? null : parseInt(v, 10));
+      updateWeather();
+    });
     updateGeo();
+    updateWeather();
   }
 
   function renderMusic(c) {
     if (Spotify.connected()) {
       c.innerHTML = `
-        <div class="music">
-          <div class="mtrack" id="mTrack">…</div>
-          <div class="mbtns">
-            <button class="bigbtn" id="mPrev">⏮</button>
-            <button class="bigbtn grn" id="mToggle">⏯</button>
-            <button class="bigbtn" id="mNext">⏭</button>
+        <div class="player">
+          <div class="pleft">
+            <button class="pbtn" id="mPrev">⏮</button>
+            <button class="pbtn grn" id="mToggle">⏯</button>
+            <button class="pbtn" id="mNext">⏭</button>
+            <button class="minibtn warn" id="mLogout">✕</button>
           </div>
-          <div class="drow">
-            <span class="dim">Connected to Spotify — controls the app playing in the background</span>
-            <button class="minibtn warn" id="mLogout">DISCONNECT</button>
-          </div>
+          <ul class="tracklist" id="mList">
+            <li class="tldim">Loading playlist…</li>
+          </ul>
         </div>`;
-      $('#mPrev').addEventListener('click', () => spCmd('prev'));
-      $('#mNext').addEventListener('click', () => spCmd('next'));
+      $('#mPrev').addEventListener('click', () => spCmd('prev', true));
+      $('#mNext').addEventListener('click', () => spCmd('next', true));
       $('#mToggle').addEventListener('click', () => spCmd('toggle'));
       $('#mLogout').addEventListener('click', () => {
         Spotify.logout();
@@ -239,6 +260,7 @@
         updateFooterIdle();
       });
       refreshNowPlaying();
+      refreshPlaylist();
     } else {
       c.innerHTML = `
         <div class="music">
@@ -278,25 +300,67 @@
     setSpStatus(Spotify.connected() ? 'SPOTIFY: CONNECTED' : 'SPOTIFY: NOT CONNECTED — TAP HERE', false);
   }
 
-  async function spCmd(cmd) {
+  async function spCmd(cmd, refreshList) {
     if (!Spotify.connected()) { goTo(pages.length - 1); return; } // jump to MUSIC setup
     try {
       await Spotify[cmd]();
       setTimeout(refreshNowPlaying, 700);
+      if (refreshList) setTimeout(refreshPlaylist, 800);
     } catch (e) {
       setSpStatus(spErrMsg(e), true);
     }
   }
 
+  let curUri = null;
   async function refreshNowPlaying() {
     if (!Spotify.connected() || !navigator.onLine) return;
     try {
       const s = await Spotify.nowPlaying();
       const txt = s ? (s.playing ? '▶ ' : '⏸ ') + s.track : 'NO ACTIVE DEVICE — OPEN SPOTIFY APP';
       setSpStatus(txt, !s);
-      setTxt('#mTrack', s ? txt : 'No active device');
+      // keep the on-screen playlist's "now playing" highlight in sync
+      const newUri = s ? s.uri : null;
+      if (newUri !== curUri) { curUri = newUri; highlightCurrent(); }
     } catch (e) {
       setSpStatus(spErrMsg(e), true);
+    }
+  }
+
+  function highlightCurrent() {
+    document.querySelectorAll('#mList li[data-uri]').forEach(li =>
+      li.classList.toggle('cur', li.dataset.uri === curUri));
+  }
+
+  async function refreshPlaylist() {
+    const list = $('#mList');
+    if (!list) return; // not on the music page
+    if (!navigator.onLine) { list.innerHTML = '<li class="tldim">Offline — track list unavailable</li>'; return; }
+    try {
+      const pl = await Spotify.playlist();
+      if (!pl || !pl.tracks.length) {
+        list.innerHTML = '<li class="tldim">No active device — open Spotify and press play</li>';
+        return;
+      }
+      curUri = pl.current;
+      list.innerHTML = pl.tracks.map(t => `
+        <li data-uri="${esc(t.uri)}" class="${t.uri === pl.current ? 'cur' : ''}">
+          <span class="tname">${esc(t.name)}</span>
+          <span class="tart">${esc(t.artist)}</span>
+        </li>`).join('');
+      list.querySelectorAll('li[data-uri]').forEach(li =>
+        li.addEventListener('click', async () => {
+          try {
+            await Spotify.playAt(li.dataset.uri, pl.contextUri);
+            curUri = li.dataset.uri;
+            highlightCurrent();
+            setTimeout(refreshNowPlaying, 700);
+          } catch (e) { setSpStatus(spErrMsg(e), true); }
+        }));
+      // scroll the current track into view
+      const cur = list.querySelector('li.cur');
+      if (cur) cur.scrollIntoView({ block: 'center' });
+    } catch (e) {
+      list.innerHTML = `<li class="tldim">${esc(spErrMsg(e))}</li>`;
     }
   }
 
@@ -314,21 +378,92 @@
     setTxt('#tStart', state.timerStart ? 'PAUSE' : 'START');
   }
 
-  function initBattery() {
-    if (!navigator.getBattery) return;
-    navigator.getBattery().then(b => {
-      const show = () => setTxt('#batt', '⚡' + Math.round(b.level * 100) + '%');
-      b.addEventListener('levelchange', show);
-      show();
-    }).catch(() => {});
+  // ---- live phone readings (battery / charging) ----
+
+  const Live = (() => {
+    let batt = null; // { level: 0..1, charging: bool }
+    const subs = [];
+    function init() {
+      if (!navigator.getBattery) return;
+      navigator.getBattery().then(b => {
+        const upd = () => { batt = { level: b.level, charging: b.charging }; subs.forEach(f => f()); };
+        b.addEventListener('levelchange', upd);
+        b.addEventListener('chargingchange', upd);
+        upd();
+      }).catch(() => {});
+    }
+    function value(key) {
+      if (!batt) return null;
+      if (key === 'battery')  return { text: Math.round(batt.level * 100) + '%', ok: batt.level >= 0.95 };
+      if (key === 'charging') return { text: batt.charging ? 'CHG' : 'ON BATT', ok: batt.charging };
+      return null;
+    }
+    return { init, onChange: f => subs.push(f), value };
+  })();
+
+  function updateHeaderBattery() {
+    const b = Live.value('battery');
+    const c = Live.value('charging');
+    if (b) setTxt('#batt', (c && c.text === 'CHG' ? '⚡' : '') + b.text);
   }
+
+  // ---- weather (QNH + outside temp) ----
+  // Phones don't expose barometric pressure or outside-air temperature to a
+  // web page, so we read them from a free, keyless weather API (open-meteo)
+  // by GPS position while online, and cache the last values for offline use.
+  // QNH can also be set by hand, which overrides the fetched value.
+
+  const Weather = (() => {
+    const LSW = 'pfc.wx.v1';
+    let wx = {};
+    try { wx = JSON.parse(localStorage.getItem(LSW) || '{}'); } catch (e) { wx = {}; }
+    const save = () => localStorage.setItem(LSW, JSON.stringify(wx));
+
+    let lastLat = null, lastLon = null, lastAt = 0, inFlight = false;
+
+    async function maybeFetch(coords, done) {
+      if (!navigator.onLine) return;
+      const now = Date.now();
+      const moved = lastLat == null ||
+        Math.abs(coords.latitude - lastLat) > 0.05 || Math.abs(coords.longitude - lastLon) > 0.05;
+      if (inFlight || (!moved && now - lastAt < 10 * 60 * 1000)) return; // ≤ every 10 min
+      inFlight = true;
+      try {
+        const url = 'https://api.open-meteo.com/v1/forecast?latitude=' +
+          coords.latitude.toFixed(3) + '&longitude=' + coords.longitude.toFixed(3) +
+          '&current=temperature_2m,pressure_msl';
+        const r = await fetch(url);
+        const j = await r.json();
+        if (j && j.current) {
+          if (j.current.pressure_msl != null) wx.qnh = Math.round(j.current.pressure_msl);
+          if (j.current.temperature_2m != null) wx.temp = Math.round(j.current.temperature_2m);
+          wx.ts = now;
+          save();
+          lastLat = coords.latitude; lastLon = coords.longitude; lastAt = now;
+          if (done) done();
+        }
+      } catch (e) { /* stay on cached values */ }
+      finally { inFlight = false; }
+    }
+
+    return {
+      maybeFetch,
+      qnh:  () => (wx.manualQnh != null ? wx.manualQnh : (wx.qnh != null ? wx.qnh : null)),
+      temp: () => (wx.temp != null ? wx.temp : null),
+      isManual: () => wx.manualQnh != null,
+      setManualQnh: v => {
+        if (v == null || isNaN(v)) delete wx.manualQnh; else wx.manualQnh = v;
+        save();
+      },
+    };
+  })();
 
   let geoId = null, lastFix = null;
   function startGeo() {
     if (geoId !== null) return;
     if (!navigator.geolocation) { setTxt('#dGps', 'GPS: not available in this browser'); return; }
     geoId = navigator.geolocation.watchPosition(
-      pos => { lastFix = pos; updateGeo(); },
+      pos => { lastFix = pos; updateGeo(); Weather.maybeFetch(pos.coords, updateWeather); },
       err => setTxt('#dGps', 'GPS: ' + err.message),
       { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 }
     );
@@ -340,9 +475,18 @@
     if (!lastFix) return;
     const c = lastFix.coords;
     setTxt('#dAlt', c.altitude == null ? '—' : Math.round(c.altitude) + ' m');
-    setTxt('#dSpd', c.speed == null ? '—' : Math.round(c.speed * 3.6) + ' km/h');
-    setTxt('#dHdg', c.heading == null || isNaN(c.heading) ? '—' : Math.round(c.heading) + '°');
     setTxt('#dGps', 'GPS: fix ±' + Math.round(c.accuracy) + ' m');
+  }
+
+  function updateWeather() {
+    const q = Weather.qnh();
+    const t = Weather.temp();
+    const qEl = $('#dQnh'), tEl = $('#dTemp');
+    if (qEl) {
+      qEl.textContent = q == null ? '—' : q;
+      qEl.classList.toggle('manual', Weather.isManual());
+    }
+    if (tEl) tEl.textContent = t == null ? '—' : t + '°';
   }
 
   function updateNet() {
@@ -357,8 +501,8 @@
     $('#btnUp').addEventListener('click', () => go(-1));
     $('#btnDown').addEventListener('click', () => go(1));
     $('#btnCheck').addEventListener('click', checkAction);
-    $('#spPrev').addEventListener('click', () => spCmd('prev'));
-    $('#spNext').addEventListener('click', () => spCmd('next'));
+    $('#spPrev').addEventListener('click', () => spCmd('prev', true));
+    $('#spNext').addEventListener('click', () => spCmd('next', true));
     $('#spToggle').addEventListener('click', () => spCmd('toggle'));
     $('#spTrack').addEventListener('click', () => goTo(pages.length - 1));
     window.addEventListener('online', () => { updateNet(); refreshNowPlaying(); });
@@ -378,7 +522,9 @@
   async function init() {
     bindUI();
     updateNet();
-    initBattery();
+    Live.init();
+    Live.onChange(updateHeaderBattery);
+    Live.onChange(updateLiveItems);
     // Returning from the Spotify OAuth redirect? Land on the MUSIC page.
     try {
       if (await Spotify.handleRedirect()) {

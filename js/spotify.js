@@ -99,21 +99,25 @@ const Spotify = (() => {
     }
   }
 
-  async function api(path, method = 'GET', retry = true) {
+  async function api(path, method = 'GET', body = null, retry = true) {
     await ensureToken();
-    const res = await fetch('https://api.spotify.com/v1' + path, {
-      method,
-      headers: { Authorization: 'Bearer ' + cfg.access },
-    });
+    const opts = { method, headers: { Authorization: 'Bearer ' + cfg.access } };
+    if (body != null) {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(body);
+    }
+    const res = await fetch('https://api.spotify.com/v1' + path, opts);
     if (res.status === 401 && retry) {
       cfg.exp = 0; // force refresh, then retry once
-      return api(path, method, false);
+      return api(path, method, body, false);
     }
     if (res.status === 403) throw new Error('PREMIUM_REQUIRED');
     if (res.status === 404) throw new Error('NO_DEVICE');
     if (!res.ok && res.status !== 204) throw new Error('API_' + res.status);
     return res;
   }
+
+  const artistsOf = t => (t.artists || []).map(a => a.name).join(', ');
 
   // ---- player controls ----
 
@@ -126,16 +130,58 @@ const Spotify = (() => {
     await api('/me/player/' + (state.playing ? 'pause' : 'play'), 'PUT');
   }
 
-  // Returns { playing, track } or null when no active device.
+  // Play a specific track. Within a playlist/album we pass its context so
+  // the queue that follows is preserved; otherwise we play the bare URI.
+  async function playAt(uri, contextUri) {
+    const body = contextUri ? { context_uri: contextUri, offset: { uri } } : { uris: [uri] };
+    await api('/me/player/play', 'PUT', body);
+  }
+
+  // Returns { playing, track, uri } or null when no active device.
   async function nowPlaying() {
     const res = await api('/me/player');
     if (res.status === 204) return null;
     const j = await res.json();
     if (!j || !j.item) return null;
-    const artists = (j.item.artists || []).map(a => a.name).join(', ');
+    const artists = artistsOf(j.item);
     return {
       playing: !!j.is_playing,
       track: j.item.name + (artists ? ' — ' + artists : ''),
+      uri: j.item.uri,
+    };
+  }
+
+  // The current playlist/album as a selectable list, or (if playback isn't
+  // in a playlist context) the up-next queue. Returns
+  //   { contextUri, current, tracks: [{uri, name, artist}] }  or null.
+  async function playlist() {
+    const res = await api('/me/player');
+    if (res.status === 204) return null;
+    const j = await res.json();
+    const ctx = j && j.context;
+    const current = j && j.item && j.item.uri;
+
+    if (ctx && (ctx.type === 'playlist' || ctx.type === 'album')) {
+      const id = ctx.uri.split(':').pop();
+      const path = ctx.type === 'playlist'
+        ? `/playlists/${id}/tracks?limit=100&fields=items(track(uri,name,artists(name)))`
+        : `/albums/${id}/tracks?limit=50`;
+      const d = await (await api(path)).json();
+      const raw = ctx.type === 'playlist' ? (d.items || []).map(i => i.track) : (d.items || []);
+      return {
+        contextUri: ctx.uri,
+        current,
+        tracks: raw.filter(Boolean).map(t => ({ uri: t.uri, name: t.name, artist: artistsOf(t) })),
+      };
+    }
+
+    // Fallback: the up-next queue (not tied to a context).
+    const q = await (await api('/me/player/queue')).json();
+    const list = [q.currently_playing, ...(q.queue || [])].filter(Boolean);
+    return {
+      contextUri: null,
+      current,
+      tracks: list.map(t => ({ uri: t.uri, name: t.name, artist: artistsOf(t) })),
     };
   }
 
@@ -143,6 +189,6 @@ const Spotify = (() => {
     connected: () => !!cfg.refresh,
     clientId: () => cfg.clientId || '',
     login, logout, handleRedirect,
-    toggle, next, prev, nowPlaying,
+    toggle, next, prev, nowPlaying, playlist, playAt,
   };
 })();

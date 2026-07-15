@@ -2,9 +2,14 @@
 //  YOUR PRE-FLIGHT CHECKLISTS — edit freely.
 //
 //  Each entry is one page: { title: "...", items: [...] }
-//  An item is either:
-//    ["Challenge", "RESPONSE"]  → rendered as   Challenge ···· RESPONSE
-//    "Plain text"               → rendered as a simple line
+//  An item is one of:
+//    "Plain text"                      → a simple line
+//    ["Challenge", "RESPONSE"]         → Challenge ···· RESPONSE
+//    ["Challenge", "RESPONSE", "live"] → adds a live reading from the
+//        phone shown just left of the target, which turns green when it
+//        matches. Available "live" keys:
+//          "battery"  → actual battery %  (green ≥ 95%)
+//          "charging" → CHG / ON BATT     (green when charging)
 //  Keep it to ~5–9 items per page so text stays big and readable
 //  on the flight deck. Add or remove pages as you like — the app
 //  adapts automatically (page dots, cycling, auto-advance).
@@ -18,11 +23,11 @@ const CHECKLISTS = [
   {
     title: "1 · FLIGHTDECK",
     items: [
-      ["Battery", "~100%"],
+      ["Battery", "~100%", "battery"],
       ["Battery", "STOWED+CONNECTED"],
       ["Phone", "SECURE"],
       ["Phone Red Cable", "CONNECTED"],
-      ["Phone Power", "CHARGING/100%"],
+      ["Phone Power", "CHARGING/100%", "charging"],
       ["Phone Volume", "UNMUTED"],
     ],
   },

@@ -6,14 +6,18 @@ landscape phone (designed on a Samsung S22 Ultra, widget taking ~2/3 of the
 screen width, XCTrack's own widgets filling the rest).
 
 - **Pre-flight checklist pages** in challenge–response format
-  (`Battery ···· 100%`) — ticking an item advances the amber "active item"
-  cursor to the next one, airliner-checklist style. Completing a page
-  auto-advances to the next checklist. Fully customisable.
+  (`Battery ···· 100%`), styled after an Airbus ECAM. Ticking an item advances
+  the amber "active item" cursor to the next one, airliner-checklist style.
+  Completing a page auto-advances to the next checklist. Fully customisable.
+- **Dynamic (live) checklist items** — an item can show a real reading from
+  the phone next to its target, turning green when it matches: `battery`
+  (actual %) and `charging` (CHG / ON BATT). See "Customising the checklists".
 - **▲ / ▼ buttons** cycle through all pages (checklists → flight data → music).
-- **FLIGHT DATA page** — local/UTC clock, stopwatch timer, GPS altitude /
-  speed / heading (from the phone's GPS, works offline), battery in the header.
+- **FLIGHT DATA page** — local/UTC clock, stopwatch timer, GPS altitude,
+  **QNH** and outside **temperature**. Tap the QNH tile to set it by hand.
 - **MUSIC page + persistent bottom bar** — previous / play-pause / next for
-  the Spotify app playing in the background (see setup below).
+  the Spotify app playing in the background, plus a **selectable track list**
+  of the current playlist (tap a track to jump to it). See setup below.
 - **Works offline** — it's a PWA: after the first visit the whole app is
   cached by a service worker, and checklist state / timer survive reloads in
   `localStorage`. Only the Spotify *control* needs internet (playback itself
@@ -68,13 +72,30 @@ request; when offline the bar shows `OFFLINE — NO MUSIC CONTROL`).
 
 ## Customising the checklists
 
-Edit [`js/checklists.js`](js/checklists.js) — one array entry per page; each
-item is `["Challenge", "RESPONSE"]` (or a plain string for a simple line).
-Add or remove pages/items freely; the page dots, cycling and
-auto-advance adapt. Changing a page's item count intentionally resets that
-page's saved ticks. After deploying changes, bump `CACHE_VERSION` in
-[`sw.js`](sw.js) so cached clients pick up the new version next time they're
-online.
+Edit [`js/checklists.js`](js/checklists.js) — one array entry per page. Each
+item is one of:
+
+- `"Plain text"` — a simple line
+- `["Challenge", "RESPONSE"]` — `Challenge ···· RESPONSE`
+- `["Challenge", "RESPONSE", "live"]` — adds a live phone reading just left of
+  the target that turns green when it matches. `live` keys: `"battery"`
+  (actual %) and `"charging"` (CHG / ON BATT).
+
+Add or remove pages/items freely; the page dots, cycling and auto-advance
+adapt. Changing a page's item count intentionally resets that page's saved
+ticks. After deploying changes, bump `CACHE_VERSION` in [`sw.js`](sw.js) so
+cached clients pick up the new version next time they're online.
+
+If the front-camera punch-hole obscures a checkbox, adjust `--cam-inset` at
+the top of [`css/style.css`](css/style.css) (it shifts the checkboxes right).
+
+### QNH & temperature
+
+Phones don't expose barometric pressure or outside-air temperature to a web
+page, so the FLIGHT DATA page reads them from a free, keyless weather service
+(open-meteo) by GPS position while online, and caches the last values for
+offline use. **Tap the QNH tile** to enter a value by hand (e.g. the tower/ATIS
+figure) — it shows amber while hand-set; clear it to return to automatic.
 
 ## Using it
 

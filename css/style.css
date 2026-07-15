@@ -11,10 +11,15 @@
   --line:  #24323e;
   --txt:   #e8eef2;
   --dim:   #7d8a94;
-  --grn:   #2ee06a;
-  --amb:   #ffb300;
-  --cyn:   #35c8ff;
+  /* Airbus ECAM-ish palette: green = normal, amber = action, cyan = data */
+  --grn:   #24e34a;
+  --amb:   #ffa000;
+  --cyn:   #24d0e6;
   --red:   #ff4d4d;
+
+  /* Nudge the checklist boxes right so the front camera punch-hole doesn't
+     obscure them. ~5mm ≈ 20px; raise/lower to taste for your handset. */
+  --cam-inset: 22px;
 }
 
 * {
@@ -64,8 +69,11 @@ header {
 }
 
 #title {
-  color: var(--cyn);
+  color: #fff; /* ECAM system titles are white, underlined */
   text-transform: uppercase;
+  text-decoration: underline;
+  text-decoration-color: var(--cyn);
+  text-underline-offset: 4px;
   flex: 1;
   min-width: 0;
   white-space: nowrap;
@@ -164,6 +172,10 @@ ul.cl {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  /* ECAM-style framed panel + camera inset on the left */
+  padding: 4px 4px 4px var(--cam-inset);
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
 ul.cl li {
@@ -216,6 +228,16 @@ ul.cl li .resp {
 ul.cl li.active .resp { color: var(--amb); }
 ul.cl li.done   .resp { color: var(--grn); }
 
+/* live phone reading shown just left of the target value */
+ul.cl li .live {
+  white-space: nowrap;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--amb);
+  padding: 0 0.15em 0 0.3em;
+}
+ul.cl li .live.ok { color: var(--grn); }
+
 ul.cl li.done { color: var(--grn); }
 ul.cl li.done .box { border-color: var(--grn); color: var(--grn); }
 ul.cl li.done .lbl { opacity: 0.75; }
@@ -264,6 +286,8 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   color: var(--cyn);
 }
 .tile .trow { display: flex; gap: 6px; }
+#tileQnh { cursor: pointer; }
+#tileQnh .tv.manual { color: var(--amb); } /* amber = hand-set QNH */
 
 .drow {
   display: flex;
@@ -290,21 +314,75 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   font-size: clamp(12px, 3vh, 17px);
   line-height: 1.35;
 }
-.mtrack {
-  text-align: center;
-  font-size: clamp(16px, 4.4vh, 28px);
+.bigbtn {
+  font-size: clamp(20px, 6vh, 40px);
+  border-radius: 14px;
+  padding: 0.4em 0.7em;
+}
+.bigbtn.grn { border-color: var(--grn); color: var(--grn); }
+
+/* ---- connected player: stacked transport buttons + track list ---- */
+
+.player {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: clamp(70px, 16vw, 110px) 1fr;
+  gap: 8px;
+}
+.pleft {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pbtn {
+  flex: 1;
+  font-size: clamp(18px, 5vh, 30px);
+  border-radius: 12px;
+}
+.pbtn.grn { border-color: var(--grn); color: var(--grn); }
+.pleft .minibtn { flex: 0 0 auto; text-align: center; }
+
+.tracklist {
+  list-style: none;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.tracklist li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0.4em 0.6em;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  min-width: 0;
+}
+.tracklist li:last-child { border-bottom: none; }
+.tracklist li:active { background: #16303e; }
+.tracklist li.tldim { color: var(--dim); cursor: default; }
+.tracklist .tname {
+  font-size: clamp(13px, 3.2vh, 19px);
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.mbtns { display: flex; gap: 8px; flex: 0 0 38%; }
-.bigbtn {
-  flex: 1;
-  font-size: clamp(24px, 8vh, 46px);
-  border-radius: 14px;
+.tracklist .tart {
+  font-size: clamp(10px, 2.4vh, 14px);
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.bigbtn.grn { border-color: var(--grn); color: var(--grn); }
+.tracklist li.cur {
+  background: #0e2a17;
+  border-left: 4px solid var(--grn);
+}
+.tracklist li.cur .tname { color: var(--grn); }
+.tracklist li.cur .tname::before { content: '▶ '; }
 
 .music input {
   background: var(--panel);
