@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>FlightDeck Checklist</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div id="title">CHECKLIST</div>
+  <div id="dots"></div>
+  <div id="hstat">
+    <span id="batt"></span>
+    <span id="clock">--:--</span>
+    <span id="net" title="online status">●</span>
+  </div>
+</header>
+
+<main>
+  <section id="content"></section>
+  <nav id="rail">
+    <button id="btnUp" class="railbtn" aria-label="previous page">▲</button>
+    <button id="btnCheck" class="railbtn check" aria-label="check item">CHECK</button>
+    <button id="btnDown" class="railbtn" aria-label="next page">▼</button>
+  </nav>
+</main>
+
+<footer>
+  <button id="spPrev" class="fbtn" aria-label="previous track">⏮</button>
+  <button id="spToggle" class="fbtn" aria-label="play / pause">⏯</button>
+  <button id="spNext" class="fbtn" aria-label="next track">⏭</button>
+  <div id="spTrack" class="dim">SPOTIFY: NOT CONNECTED</div>
+</footer>
+
+<div id="toast" hidden></div>
+
+<script src="js/checklists.js"></script>
+<script src="js/spotify.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

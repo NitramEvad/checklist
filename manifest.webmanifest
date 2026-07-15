@@ -1,0 +1,13 @@
+{
+  "name": "FlightDeck Checklist",
+  "short_name": "FlightDeck",
+  "description": "Pre-flight checklist and flight-deck widget for XCTrack",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

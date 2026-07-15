@@ -1,0 +1,344 @@
+/* ============================================================
+   FlightDeck Checklist — EICAS-style dark cockpit theme.
+   Designed for a landscape phone WebView (~600×410 CSS px when
+   the XCTrack widget takes 2/3 of an S22 Ultra screen), but
+   scales fluidly via vh/vw units.
+   ============================================================ */
+
+:root {
+  --bg:    #000000;
+  --panel: #0d1319;
+  --line:  #24323e;
+  --txt:   #e8eef2;
+  --dim:   #7d8a94;
+  --grn:   #2ee06a;
+  --amb:   #ffb300;
+  --cyn:   #35c8ff;
+  --red:   #ff4d4d;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+button:active { background: #16303e; border-color: var(--cyn); }
+
+/* ---------- header ---------- */
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.3em 0.6em;
+  border-bottom: 2px solid var(--line);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  font-size: clamp(14px, 3.6vh, 22px);
+}
+
+#title {
+  color: var(--cyn);
+  text-transform: uppercase;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#dots { display: flex; gap: 0.35em; }
+.dot {
+  width: 0.55em;
+  height: 0.55em;
+  border-radius: 50%;
+  background: var(--line);
+}
+.dot.ok  { background: var(--grn); }
+.dot.cur { background: var(--cyn); outline: 2px solid var(--cyn); outline-offset: 2px; }
+.dot.cur.ok { background: var(--grn); outline-color: var(--grn); }
+
+#hstat {
+  display: flex;
+  gap: 0.6em;
+  align-items: center;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+#net.ok  { color: var(--grn); }
+#net.off { color: var(--red); }
+
+/* ---------- main layout ---------- */
+
+main {
+  display: grid;
+  grid-template-columns: 1fr clamp(84px, 15vw, 140px);
+  min-height: 0;
+}
+
+#content {
+  min-width: 0;
+  min-height: 0;
+  padding: 0.4em 0.7em;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#rail {
+  display: grid;
+  grid-template-rows: 1fr 1.2fr 1fr;
+  gap: 6px;
+  padding: 6px;
+  border-left: 2px solid var(--line);
+}
+
+.railbtn {
+  font-size: clamp(22px, 6vh, 38px);
+  font-weight: 800;
+  border-radius: 14px;
+}
+.railbtn.check {
+  border-color: var(--grn);
+  color: var(--grn);
+  font-size: clamp(15px, 3.8vh, 26px);
+  letter-spacing: 0.05em;
+}
+.railbtn.check:active { background: #103822; }
+
+/* ---------- checklist page ---------- */
+
+.clhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.25em;
+}
+.prog {
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+  font-size: clamp(13px, 3.2vh, 20px);
+}
+.prog.ok { color: var(--grn); }
+
+.minibtn {
+  font-size: clamp(11px, 2.6vh, 16px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.35em 0.9em;
+  color: var(--dim);
+}
+.minibtn.warn { border-color: #5a3200; color: var(--amb); }
+
+ul.cl {
+  list-style: none;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+ul.cl li {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  padding: 0 0.55em;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-size: clamp(15px, 4.2vh, 27px);
+  font-weight: 600;
+  min-height: 0;
+  cursor: pointer;
+}
+
+ul.cl li .box {
+  flex: 0 0 1.5em;
+  height: 1.25em;
+  border: 2px solid var(--dim);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85em;
+  font-weight: 900;
+}
+ul.cl li .lbl {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+ul.cl li.done { color: var(--grn); }
+ul.cl li.done .box { border-color: var(--grn); color: var(--grn); }
+ul.cl li.done .lbl { opacity: 0.75; }
+
+ul.cl li.active {
+  border-color: var(--amb);
+  background: #1a1200;
+  color: #fff;
+}
+ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
+
+/* ---------- data page ---------- */
+
+.tiles {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr 1fr;
+  gap: 6px;
+}
+
+.tile {
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  padding: 0.3em 0.5em;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.15em;
+  min-height: 0;
+  overflow: hidden;
+}
+.tile .tl {
+  color: var(--dim);
+  font-size: clamp(10px, 2.4vh, 15px);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.tile .tv {
+  font-size: clamp(20px, 6vh, 40px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--cyn);
+}
+.tile .trow { display: flex; gap: 6px; }
+
+.drow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6em;
+  padding-top: 0.35em;
+  font-size: clamp(11px, 2.8vh, 16px);
+}
+.dim { color: var(--dim); }
+
+/* ---------- music page ---------- */
+
+.music {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.7em;
+}
+.music p {
+  color: var(--dim);
+  font-size: clamp(12px, 3vh, 17px);
+  line-height: 1.35;
+}
+.mtrack {
+  text-align: center;
+  font-size: clamp(16px, 4.4vh, 28px);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mbtns { display: flex; gap: 8px; flex: 0 0 38%; }
+.bigbtn {
+  flex: 1;
+  font-size: clamp(24px, 8vh, 46px);
+  border-radius: 14px;
+}
+.bigbtn.grn { border-color: var(--grn); color: var(--grn); }
+
+.music input {
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  color: var(--txt);
+  font-size: clamp(14px, 3.4vh, 20px);
+  padding: 0.5em 0.7em;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* ---------- footer (spotify bar) ---------- */
+
+footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-top: 2px solid var(--line);
+}
+
+.fbtn {
+  font-size: clamp(16px, 4.2vh, 26px);
+  padding: 0.1em 0.7em;
+  border-radius: 10px;
+}
+
+#spTrack {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: clamp(12px, 3vh, 18px);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+#spTrack.warn { color: var(--amb); }
+
+/* ---------- toast ---------- */
+
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 18%;
+  transform: translateX(-50%);
+  background: #142430;
+  border: 2px solid var(--cyn);
+  border-radius: 10px;
+  padding: 0.5em 1.2em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  font-size: clamp(13px, 3.2vh, 19px);
+  z-index: 10;
+}
