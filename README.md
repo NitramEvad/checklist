@@ -12,12 +12,18 @@ screen width, XCTrack's own widgets filling the rest).
 - **Dynamic (live) checklist items** — an item can show a real reading from
   the phone next to its target, turning green when it matches: `battery`
   (actual %) and `charging` (CHG / ON BATT). See "Customising the checklists".
-- **▲ / ▼ buttons** cycle through all pages (checklists → flight data → music).
+- **▲ / ▼ buttons** cycle through all pages (checklists → flight data → music
+  → notes).
 - **FLIGHT DATA page** — local/UTC clock, stopwatch timer, GPS altitude,
   **QNH** and outside **temperature**. Tap the QNH tile to set it by hand.
 - **MUSIC page + persistent bottom bar** — previous / play-pause / next for
   the Spotify app playing in the background, plus a **selectable track list**
   of the current playlist (tap a track to jump to it). See setup below.
+  **Requires Spotify Premium** (a per-account tier — it is never shared via
+  Family/Duo). On a free account the track list can't load, so that space
+  shows your notes instead.
+- **NOTES page** — free-text notes, **editable on the hill** (tap, type, saved
+  on the phone) with a default you can pre-write in `checklists.js`.
 - **Works offline, updates promptly** — it's a PWA with a network-first
   service worker: when you have a signal it loads the latest (so a checklist
   you edited and redeployed shows on the very next open); when you don't, it
@@ -59,6 +65,12 @@ phone via the Spotify Web API. Requirements: **Spotify Premium** and internet
 at the moment you press a button (patchy 4G is fine — each press is one tiny
 request; when offline the bar shows `OFFLINE — NO MUSIC CONTROL`).
 
+> **Premium is per-account and is *not* shared** by Spotify Family or Duo —
+> each person keeps their own tier. On a free account the Web API refuses
+> playback control and the track-list endpoints (`SPOTIFY PREMIUM REQUIRED`),
+> so the MUSIC page shows your **notes** in that space instead of a track list.
+> The whole rest of the app works fine regardless.
+
 1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
    (free), **Create app**.
 2. Set the **Redirect URI** to the site's exact URL, e.g.
@@ -96,6 +108,14 @@ content edits — that's only a lever to force every client to drop its cache.
 
 If the front-camera punch-hole obscures a checkbox, adjust `--cam-inset` at
 the top of [`css/style.css`](css/style.css) (it shifts the checkboxes right).
+
+### Notes page
+
+The last page holds free-text notes. You can **edit them on the hill** — tap
+the text, type, and it saves to the phone immediately (survives reloads and
+works offline). To pre-write a default, edit `NOTES_DEFAULT` at the bottom of
+[`js/checklists.js`](js/checklists.js); **RESET** on the Notes page restores it.
+On-device edits always take priority over the default until you reset.
 
 ### QNH & temperature
 

@@ -384,6 +384,50 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
 .tracklist li.cur .tname { color: var(--grn); }
 .tracklist li.cur .tname::before { content: '▶ '; }
 
+/* notes shown read-only in the track-list area when tracks can't load */
+.tracklist li.tlnotes { cursor: default; display: block; }
+.tlnotes-h {
+  color: var(--cyn);
+  font-size: clamp(10px, 2.4vh, 14px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.3em;
+}
+.tlnotes-b {
+  white-space: pre-wrap;
+  font-size: clamp(12px, 3vh, 17px);
+  line-height: 1.35;
+  color: var(--txt);
+}
+
+/* ---------- notes page ---------- */
+
+.notes {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+#notesArea {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  resize: none;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--txt);
+  font-family: ui-monospace, "Roboto Mono", Menlo, Consolas, monospace;
+  font-size: clamp(14px, 3.6vh, 21px);
+  line-height: 1.4;
+  padding: 0.5em 0.7em;
+  user-select: text;
+  -webkit-user-select: text;
+  white-space: pre-wrap;
+}
+#notesArea:focus { outline: none; border-color: var(--cyn); }
+
 .music input {
   background: var(--panel);
   border: 2px solid var(--line);

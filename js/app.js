@@ -18,8 +18,17 @@
     ...CHECKLISTS.map(c => ({ type: 'checklist', title: c.title, items: c.items })),
     { type: 'data',  title: 'FLIGHT DATA' },
     { type: 'music', title: 'MUSIC' },
+    { type: 'notes', title: 'NOTES' },
   ];
   const CL_COUNT = CHECKLISTS.length;
+
+  // Notes: on-device edits (localStorage) take priority over NOTES_DEFAULT.
+  const NOTES_KEY = 'pfc.notes.v1';
+  const DEFAULT_NOTES = (typeof NOTES_DEFAULT === 'string') ? NOTES_DEFAULT : '';
+  const getNotes = () => {
+    const v = localStorage.getItem(NOTES_KEY);
+    return v == null ? DEFAULT_NOTES : v;
+  };
 
   // ---- state ----
 
@@ -93,6 +102,7 @@
   // the next page; on data/music pages act as play/pause.
   function checkAction() {
     const pi = state.page;
+    if (pages[pi].type === 'notes') return;              // nothing to do here
     if (pages[pi].type !== 'checklist') { spCmd('toggle'); return; }
     const idx = activeIndex(pi);
     if (idx === -1) { go(1); return; }
@@ -121,9 +131,11 @@
     const c = $('#content');
     if (p.type === 'checklist')   renderChecklist(c, state.page);
     else if (p.type === 'data') { renderData(c); startGeo(); }
-    else                          renderMusic(c);
+    else if (p.type === 'music')  renderMusic(c);
+    else                          renderNotes(c);
     $('#btnCheck').textContent =
-      p.type === 'checklist' ? (pageComplete(state.page) ? 'NEXT ▶' : 'CHECK ✓') : '⏯';
+      p.type === 'checklist' ? (pageComplete(state.page) ? 'NEXT ▶' : 'CHECK ✓') :
+      p.type === 'notes'     ? '·' : '⏯';
     tick();
   }
 
@@ -281,6 +293,33 @@
     }
   }
 
+  // ---- notes page ----
+
+  function renderNotes(c) {
+    c.innerHTML = `
+      <div class="notes">
+        <div class="clhead">
+          <span class="prog">TAP TO EDIT — SAVED ON THIS PHONE</span>
+          <button class="minibtn warn" id="notesReset">RESET</button>
+        </div>
+        <textarea id="notesArea" spellcheck="false"
+          placeholder="Your notes…">${esc(getNotes())}</textarea>
+      </div>`;
+    const ta = $('#notesArea');
+    ta.addEventListener('input', () => localStorage.setItem(NOTES_KEY, ta.value));
+    $('#notesReset').addEventListener('click', () => {
+      if (!confirm('Reset notes to the default from checklists.js?')) return;
+      localStorage.removeItem(NOTES_KEY);
+      ta.value = getNotes();
+    });
+  }
+
+  // Read-only notes, shown in the music page's empty space when the track
+  // list can't load (e.g. no Premium). Escaped; newlines preserved by CSS.
+  const notesReadonlyHtml = () =>
+    `<li class="tlnotes"><div class="tlnotes-h">NOTES — edit on the Notes page ▼</div>` +
+    `<div class="tlnotes-b">${esc(getNotes()) || '<span class="tldim">No notes yet</span>'}</div></li>`;
+
   // ---- spotify glue ----
 
   function spErrMsg(e) {
@@ -334,11 +373,16 @@
   async function refreshPlaylist() {
     const list = $('#mList');
     if (!list) return; // not on the music page
-    if (!navigator.onLine) { list.innerHTML = '<li class="tldim">Offline — track list unavailable</li>'; return; }
+    // When the track list can't load (offline, no Premium, no device), reuse
+    // the space to show your notes read-only rather than a bare error line.
+    const showNotes = (msg) => {
+      list.innerHTML = `<li class="tldim">${esc(msg)}</li>` + notesReadonlyHtml();
+    };
+    if (!navigator.onLine) { showNotes('Offline — track list unavailable'); return; }
     try {
       const pl = await Spotify.playlist();
       if (!pl || !pl.tracks.length) {
-        list.innerHTML = '<li class="tldim">No active device — open Spotify and press play</li>';
+        showNotes('No active device — open Spotify and press play');
         return;
       }
       curUri = pl.current;
@@ -360,7 +404,7 @@
       const cur = list.querySelector('li.cur');
       if (cur) cur.scrollIntoView({ block: 'center' });
     } catch (e) {
-      list.innerHTML = `<li class="tldim">${esc(spErrMsg(e))}</li>`;
+      showNotes(spErrMsg(e));
     }
   }
 
@@ -508,10 +552,13 @@
     window.addEventListener('online', () => { updateNet(); refreshNowPlaying(); });
     window.addEventListener('offline', updateNet);
     document.addEventListener('keydown', e => {
+      // Don't hijack keys while editing a text field (notes / Spotify ID).
+      const editing = /^(INPUT|TEXTAREA)$/.test(e.target.tagName);
+      if (editing) return;
       if (e.key === 'ArrowUp')   go(-1);
       if (e.key === 'ArrowDown') go(1);
       if (e.key === 'Enter' || e.key === ' ') {
-        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+        if (e.target.tagName !== 'BUTTON') {
           e.preventDefault();
           checkAction();
         }
