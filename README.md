@@ -18,11 +18,13 @@ screen width, XCTrack's own widgets filling the rest).
 - **MUSIC page + persistent bottom bar** — previous / play-pause / next for
   the Spotify app playing in the background, plus a **selectable track list**
   of the current playlist (tap a track to jump to it). See setup below.
-- **Works offline** — it's a PWA: after the first visit the whole app is
-  cached by a service worker, and checklist state / timer survive reloads in
-  `localStorage`. Only the Spotify *control* needs internet (playback itself
-  is the Spotify app's business — it keeps playing your downloaded music
-  regardless).
+- **Works offline, updates promptly** — it's a PWA with a network-first
+  service worker: when you have a signal it loads the latest (so a checklist
+  you edited and redeployed shows on the very next open); when you don't, it
+  falls back instantly to the cached copy. Checklist state / timer survive
+  reloads in `localStorage`. Only the Spotify *control* needs internet
+  (playback itself is the Spotify app's business — it keeps playing your
+  downloaded music regardless).
 
 No build step, no dependencies — plain HTML/CSS/JS.
 
@@ -83,8 +85,14 @@ item is one of:
 
 Add or remove pages/items freely; the page dots, cycling and auto-advance
 adapt. Changing a page's item count intentionally resets that page's saved
-ticks. After deploying changes, bump `CACHE_VERSION` in [`sw.js`](sw.js) so
-cached clients pick up the new version next time they're online.
+ticks.
+
+**How your phone picks up edits:** commit to `main` → GitHub Actions
+redeploys (~1 min) → the widget shows the new version the next time it loads
+**with a signal** (the service worker is network-first, so no manual refresh
+or cache-clearing). If you're offline it keeps showing the last version it
+cached. You do **not** need to bump `CACHE_VERSION` in [`sw.js`](sw.js) for
+content edits — that's only a lever to force every client to drop its cache.
 
 If the front-camera punch-hole obscures a checkbox, adjust `--cam-inset` at
 the top of [`css/style.css`](css/style.css) (it shifts the checkboxes right).
