@@ -145,15 +145,17 @@ const CHECKLISTS = [
 // ============================================================
 
 const NOTES_DEFAULT = `SITE NOTES
-- Launch:
-- LZ / bomb-out:
-- Hazards:
-
-RADIO
-- Club freq:
-- Emergency:
-
-REMINDERS
-- Wing check
-- Look before turning
+1. Aston Down -> G: 3,600
+2. Cotswold <- CTR: 2,500
+3. Highgrove -> R: 2,000
+4. <- Malmsbury
+5. Bristol <-> CTA: 4,500
+6. <- Chippenham
+7. Trowbridge
+8. <- Westbury
+9 Imber <- D:!!!
+10. <- Warminster
+11. -> Gillingham
+12. -> Sturminster Newton
+13. Wareham
 `;
