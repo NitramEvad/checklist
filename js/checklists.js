@@ -135,10 +135,10 @@ const CHECKLISTS = [
 ];
 
 // ============================================================
-//  NOTES page (last page, after MUSIC).
+//  NOTES — shown (and editable) on the MUSIC page.
 //
 //  This is the text shown the FIRST time, and whenever you tap
-//  RESET on the Notes page. You can also just edit the notes
+//  RESET on the MUSIC page. You can also just edit the notes
 //  live on the hill — tap the text, type, and it's saved on the
 //  phone automatically (your on-device edits take priority over
 //  this default until you RESET).

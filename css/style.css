@@ -258,6 +258,7 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: 1fr 1fr;
   gap: 6px;
+  padding-left: var(--cam-inset); /* keep LOCAL / ALT GPS clear of the camera */
 }
 
 .tile {
@@ -295,6 +296,7 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   justify-content: space-between;
   gap: 0.6em;
   padding-top: 0.35em;
+  padding-left: var(--cam-inset); /* align the GPS row under the tiles */
   font-size: clamp(11px, 2.8vh, 16px);
 }
 .dim { color: var(--dim); }
@@ -329,6 +331,7 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   display: grid;
   grid-template-columns: clamp(70px, 16vw, 110px) 1fr;
   gap: 8px;
+  padding-left: var(--cam-inset); /* keep the transport buttons clear of the camera */
 }
 .pleft {
   display: flex;

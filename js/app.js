@@ -18,7 +18,6 @@
     ...CHECKLISTS.map(c => ({ type: 'checklist', title: c.title, items: c.items })),
     { type: 'data',  title: 'FLIGHT DATA' },
     { type: 'music', title: 'MUSIC' },
-    { type: 'notes', title: 'NOTES' },
   ];
   const CL_COUNT = CHECKLISTS.length;
   const MUSIC_PAGE = pages.findIndex(p => p.type === 'music');
@@ -107,7 +106,6 @@
   // the next page; on data/music pages act as play/pause.
   function checkAction() {
     const pi = state.page;
-    if (pages[pi].type === 'notes') return;              // nothing to do here
     if (pages[pi].type !== 'checklist') { spCmd('toggle'); return; }
     const idx = activeIndex(pi);
     if (idx === -1) { go(1); return; }
@@ -136,11 +134,9 @@
     const c = $('#content');
     if (p.type === 'checklist')   renderChecklist(c, state.page);
     else if (p.type === 'data') { renderData(c); startGeo(); }
-    else if (p.type === 'music')  renderMusic(c);
-    else                          renderNotes(c);
+    else                          renderMusic(c);
     $('#btnCheck').textContent =
-      p.type === 'checklist' ? (pageComplete(state.page) ? 'NEXT ▶' : 'CHECK ✓') :
-      p.type === 'notes'     ? '·' : '⏯';
+      p.type === 'checklist' ? (pageComplete(state.page) ? 'NEXT ▶' : 'CHECK ✓') : '⏯';
     tick();
   }
 
@@ -324,15 +320,10 @@
     });
   }
 
-  function renderNotes(c) {
-    c.innerHTML = notesEditorHtml('notesArea', 'notesReset', 'TAP TO EDIT — SAVED ON THIS PHONE');
-    bindNotesEditor('notesArea', 'notesReset');
-  }
-
-  // Read-only notes, shown in the music page's empty space when the track
-  // list can't load (e.g. no Premium). Escaped; newlines preserved by CSS.
+  // Read-only notes, shown in the track-list area only when SHOW_TRACKLIST is
+  // on but the list can't load (e.g. no active device). Escaped; newlines via CSS.
   const notesReadonlyHtml = () =>
-    `<li class="tlnotes"><div class="tlnotes-h">NOTES — edit on the Notes page ▼</div>` +
+    `<li class="tlnotes"><div class="tlnotes-h">NOTES</div>` +
     `<div class="tlnotes-b">${esc(getNotes()) || '<span class="tldim">No notes yet</span>'}</div></li>`;
 
   // ---- spotify glue ----

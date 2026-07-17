@@ -12,19 +12,15 @@ screen width, XCTrack's own widgets filling the rest).
 - **Dynamic (live) checklist items** — an item can show a real reading from
   the phone next to its target, turning green when it matches: `battery`
   (actual %) and `charging` (CHG / ON BATT). See "Customising the checklists".
-- **▲ / ▼ buttons** cycle through all pages (checklists → flight data → music
-  → notes).
+- **▲ / ▼ buttons** cycle through all pages (checklists → flight data → music).
 - **FLIGHT DATA page** — local/UTC clock, stopwatch timer, GPS altitude,
   **QNH** and outside **temperature**. Tap the QNH tile to set it by hand.
 - **MUSIC page + persistent bottom bar** — previous / play-pause / next for
-  the Spotify app playing in the background. **Playback control needs Spotify
-  Premium** (a per-account tier — never shared via Family/Duo). Because of
-  that, the page currently shows your **editable notes** (the same ones as the
-  Notes page) beside the transport buttons instead of a track list. If you get
-  Premium, set `SHOW_TRACKLIST = true` in `js/app.js` to bring back the
-  selectable track list of the current playlist.
-- **NOTES page** — free-text notes, **editable on the hill** (tap, type, saved
-  on the phone) with a default you can pre-write in `checklists.js`.
+  the Spotify app playing in the background, plus your **editable notes**
+  (tap, type, saved on the phone) beside the transport buttons. **Playback
+  control needs Spotify Premium** (a per-account tier — never shared via
+  Family/Duo); with Premium you can set `SHOW_TRACKLIST = true` in `js/app.js`
+  to replace the notes with a selectable track list of the current playlist.
 - **Works offline, updates promptly** — it's a PWA with a network-first
   service worker: when you have a signal it loads the latest (so a checklist
   you edited and redeployed shows on the very next open); when you don't, it
@@ -108,16 +104,19 @@ or cache-clearing). If you're offline it keeps showing the last version it
 cached. You do **not** need to bump `CACHE_VERSION` in [`sw.js`](sw.js) for
 content edits — that's only a lever to force every client to drop its cache.
 
-If the front-camera punch-hole obscures a checkbox, adjust `--cam-inset` at
-the top of [`css/style.css`](css/style.css) (it shifts the checkboxes right).
+If the front-camera punch-hole obscures anything on the left, adjust
+`--cam-inset` at the top of [`css/style.css`](css/style.css) — it reserves a
+left margin on every page (checklist boxes, the FLIGHT DATA tiles, and the
+MUSIC transport buttons all shift right together).
 
-### Notes page
+### Notes
 
-The last page holds free-text notes. You can **edit them on the hill** — tap
-the text, type, and it saves to the phone immediately (survives reloads and
-works offline). To pre-write a default, edit `NOTES_DEFAULT` at the bottom of
-[`js/checklists.js`](js/checklists.js); **RESET** on the Notes page restores it.
-On-device edits always take priority over the default until you reset.
+The **MUSIC page** holds free-text notes beside the transport buttons. You can
+**edit them on the hill** — tap the text, type, and it saves to the phone
+immediately (survives reloads and works offline). To pre-write a default, edit
+`NOTES_DEFAULT` at the bottom of [`js/checklists.js`](js/checklists.js);
+**RESET** on the MUSIC page restores it. On-device edits always take priority
+over the default until you reset.
 
 ### QNH & temperature
 
