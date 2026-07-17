@@ -409,7 +409,7 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   flex-direction: column;
   gap: 0.3em;
 }
-#notesArea {
+.notesArea {
   flex: 1;
   min-height: 0;
   width: 100%;
@@ -426,7 +426,7 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   -webkit-user-select: text;
   white-space: pre-wrap;
 }
-#notesArea:focus { outline: none; border-color: var(--cyn); }
+.notesArea:focus { outline: none; border-color: var(--cyn); }
 
 .music input {
   background: var(--panel);

@@ -23,6 +23,10 @@
   const CL_COUNT = CHECKLISTS.length;
   const MUSIC_PAGE = pages.findIndex(p => p.type === 'music');
 
+  // The Spotify track list needs a Premium account. With no Premium, show the
+  // editable notes on the MUSIC page instead. Flip to true if you go Premium.
+  const SHOW_TRACKLIST = false;
+
   // Notes: on-device edits (localStorage) take priority over NOTES_DEFAULT.
   const NOTES_KEY = 'pfc.notes.v1';
   const DEFAULT_NOTES = (typeof NOTES_DEFAULT === 'string') ? NOTES_DEFAULT : '';
@@ -260,9 +264,9 @@
             <button class="pbtn" id="mNext">⏭</button>
             <button class="minibtn warn" id="mLogout">✕</button>
           </div>
-          <ul class="tracklist" id="mList">
-            <li class="tldim">Loading playlist…</li>
-          </ul>
+          ${SHOW_TRACKLIST
+            ? `<ul class="tracklist" id="mList"><li class="tldim">Loading playlist…</li></ul>`
+            : notesEditorHtml('mNotes', 'mNotesReset', 'NOTES — SAVED ON THIS PHONE')}
         </div>`;
       $('#mPrev').addEventListener('click', () => spCmd('prev', true));
       $('#mNext').addEventListener('click', () => spCmd('next', true));
@@ -273,7 +277,8 @@
         updateFooterIdle();
       });
       refreshNowPlaying();
-      refreshPlaylist();
+      if (SHOW_TRACKLIST) refreshPlaylist();
+      else bindNotesEditor('mNotes', 'mNotesReset');
     } else {
       c.innerHTML = `
         <div class="music">
@@ -296,23 +301,32 @@
 
   // ---- notes page ----
 
-  function renderNotes(c) {
-    c.innerHTML = `
-      <div class="notes">
-        <div class="clhead">
-          <span class="prog">TAP TO EDIT — SAVED ON THIS PHONE</span>
-          <button class="minibtn warn" id="notesReset">RESET</button>
-        </div>
-        <textarea id="notesArea" spellcheck="false"
-          placeholder="Your notes…">${esc(getNotes())}</textarea>
-      </div>`;
-    const ta = $('#notesArea');
+  // Reusable editable-notes block — shared by the NOTES page and (when there's
+  // no Spotify Premium) the MUSIC page. Both edit the same stored text, so they
+  // always show the same notes.
+  const notesEditorHtml = (taId, resetId, header) => `
+    <div class="notes">
+      <div class="clhead">
+        <span class="prog">${header}</span>
+        <button class="minibtn warn" id="${resetId}">RESET</button>
+      </div>
+      <textarea id="${taId}" class="notesArea" spellcheck="false"
+        placeholder="Your notes…">${esc(getNotes())}</textarea>
+    </div>`;
+
+  function bindNotesEditor(taId, resetId) {
+    const ta = $('#' + taId);
     ta.addEventListener('input', () => localStorage.setItem(NOTES_KEY, ta.value));
-    $('#notesReset').addEventListener('click', () => {
+    $('#' + resetId).addEventListener('click', () => {
       if (!confirm('Reset notes to the default from checklists.js?')) return;
       localStorage.removeItem(NOTES_KEY);
       ta.value = getNotes();
     });
+  }
+
+  function renderNotes(c) {
+    c.innerHTML = notesEditorHtml('notesArea', 'notesReset', 'TAP TO EDIT — SAVED ON THIS PHONE');
+    bindNotesEditor('notesArea', 'notesReset');
   }
 
   // Read-only notes, shown in the music page's empty space when the track

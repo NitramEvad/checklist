@@ -17,11 +17,12 @@ screen width, XCTrack's own widgets filling the rest).
 - **FLIGHT DATA page** — local/UTC clock, stopwatch timer, GPS altitude,
   **QNH** and outside **temperature**. Tap the QNH tile to set it by hand.
 - **MUSIC page + persistent bottom bar** — previous / play-pause / next for
-  the Spotify app playing in the background, plus a **selectable track list**
-  of the current playlist (tap a track to jump to it). See setup below.
-  **Requires Spotify Premium** (a per-account tier — it is never shared via
-  Family/Duo). On a free account the track list can't load, so that space
-  shows your notes instead.
+  the Spotify app playing in the background. **Playback control needs Spotify
+  Premium** (a per-account tier — never shared via Family/Duo). Because of
+  that, the page currently shows your **editable notes** (the same ones as the
+  Notes page) beside the transport buttons instead of a track list. If you get
+  Premium, set `SHOW_TRACKLIST = true` in `js/app.js` to bring back the
+  selectable track list of the current playlist.
 - **NOTES page** — free-text notes, **editable on the hill** (tap, type, saved
   on the phone) with a default you can pre-write in `checklists.js`.
 - **Works offline, updates promptly** — it's a PWA with a network-first
@@ -67,9 +68,10 @@ request; when offline the bar shows `OFFLINE — NO MUSIC CONTROL`).
 
 > **Premium is per-account and is *not* shared** by Spotify Family or Duo —
 > each person keeps their own tier. On a free account the Web API refuses
-> playback control and the track-list endpoints (`SPOTIFY PREMIUM REQUIRED`),
-> so the MUSIC page shows your **notes** in that space instead of a track list.
-> The whole rest of the app works fine regardless.
+> playback control (`SPOTIFY PREMIUM REQUIRED`). Because of that the MUSIC page
+> ships with `SHOW_TRACKLIST = false` (in `js/app.js`), showing your editable
+> notes beside the transport buttons instead of a track list. The whole rest
+> of the app works fine regardless; flip the flag to `true` if you go Premium.
 
 1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
    (free), **Create app**.
