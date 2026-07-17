@@ -21,6 +21,7 @@
     { type: 'notes', title: 'NOTES' },
   ];
   const CL_COUNT = CHECKLISTS.length;
+  const MUSIC_PAGE = pages.findIndex(p => p.type === 'music');
 
   // Notes: on-device edits (localStorage) take priority over NOTES_DEFAULT.
   const NOTES_KEY = 'pfc.notes.v1';
@@ -340,7 +341,7 @@
   }
 
   async function spCmd(cmd, refreshList) {
-    if (!Spotify.connected()) { goTo(pages.length - 1); return; } // jump to MUSIC setup
+    if (!Spotify.connected()) { goTo(MUSIC_PAGE); return; } // jump to MUSIC setup
     try {
       await Spotify[cmd]();
       setTimeout(refreshNowPlaying, 700);
@@ -437,6 +438,11 @@
       }).catch(() => {});
     }
     function value(key) {
+      // QNH comes from the Weather module (not the battery), so handle it first.
+      if (key === 'qnh') {
+        const q = Weather.qnh();
+        return q == null ? null : { text: q + ' hPa', ok: false }; // informational
+      }
       if (!batt) return null;
       if (key === 'battery')  return { text: Math.round(batt.level * 100) + '%', ok: batt.level >= 0.95 };
       if (key === 'charging') return { text: batt.charging ? 'CHG' : 'ON BATT', ok: batt.charging };
@@ -531,6 +537,17 @@
       qEl.classList.toggle('manual', Weather.isManual());
     }
     if (tEl) tEl.textContent = t == null ? '—' : t + '°';
+    updateLiveItems(); // refresh the QNH reading on the XCTRACK checklist too
+  }
+
+  // Fetch weather once at startup (independent of the FLIGHT DATA page's live
+  // GPS watch) so the checklist QNH reading is populated from the first visit.
+  function primeWeather() {
+    if (!navigator.geolocation || !navigator.onLine) return;
+    navigator.geolocation.getCurrentPosition(
+      pos => Weather.maybeFetch(pos.coords, updateWeather),
+      () => {}, { enableHighAccuracy: false, maximumAge: 600000, timeout: 15000 }
+    );
   }
 
   function updateNet() {
@@ -548,7 +565,7 @@
     $('#spPrev').addEventListener('click', () => spCmd('prev', true));
     $('#spNext').addEventListener('click', () => spCmd('next', true));
     $('#spToggle').addEventListener('click', () => spCmd('toggle'));
-    $('#spTrack').addEventListener('click', () => goTo(pages.length - 1));
+    $('#spTrack').addEventListener('click', () => goTo(MUSIC_PAGE));
     window.addEventListener('online', () => { updateNet(); refreshNowPlaying(); });
     window.addEventListener('offline', updateNet);
     document.addEventListener('keydown', e => {
@@ -575,7 +592,7 @@
     // Returning from the Spotify OAuth redirect? Land on the MUSIC page.
     try {
       if (await Spotify.handleRedirect()) {
-        state.page = pages.length - 1;
+        state.page = MUSIC_PAGE;
         save();
         toast('SPOTIFY CONNECTED ✓');
       }
@@ -585,6 +602,7 @@
     render();
     updateFooterIdle();
     refreshNowPlaying();
+    primeWeather();
     setInterval(tick, 1000);
     setInterval(refreshNowPlaying, 12000);
     // Offline capability: cache the whole app on first visit.

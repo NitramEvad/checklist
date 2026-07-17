@@ -10,6 +10,8 @@
 //        matches. Available "live" keys:
 //          "battery"  → actual battery %  (green ≥ 95%)
 //          "charging" → CHG / ON BATT     (green when charging)
+//          "qnh"      → current QNH in hPa (from the FLIGHT DATA page —
+//                       the auto weather value, or your hand-set one)
 //  Keep it to ~5–9 items per page so text stays big and readable
 //  on the flight deck. Add or remove pages as you like — the app
 //  adapts automatically (page dots, cycling, auto-advance).
@@ -61,7 +63,7 @@ const CHECKLISTS = [
       ["Task", "SET"],
       ["Airspace", "ACTIVATED"],
       ["Pages", "CHECKED"],
-      ["QNH/GPS Alt", "SET"],
+      ["QNH/GPS Alt", "SET", "qnh"],
       ["XC Tracer Volume", "MUTE"],
     ],
   },
