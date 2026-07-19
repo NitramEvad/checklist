@@ -133,7 +133,7 @@ figure) — it shows amber while hand-set; clear it to return to automatic.
 | ▲ / ▼ | Previous / next page (wraps around) |
 | CHECK ✓ | Tick the current (amber) checklist item and move to the next unchecked one |
 | NEXT ▶ | Shown when a page is complete — jumps to next page |
-| ADV | Skip to the next unchecked item **without** ticking — cycles through any items you skipped so you can come back and check/skip them |
+| ADV | Skip to the next unchecked item **without** ticking. Moves down the page and, once past its last unchecked item, carries on to the next page's first unchecked item (wrapping around all pages) — so you can cycle through everything you skipped |
 | Tap any item | Toggle it (e.g. un-tick a mistake) |
 | RESET | Clear the current page (top-right of each checklist) |
 | RESET ALL CHECKLISTS | On the FLIGHT DATA page — do this before each flight |

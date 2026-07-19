@@ -144,15 +144,40 @@
     maybeAdvance(pi);
   }
 
-  // ADV button: move the cursor to the next unchecked item WITHOUT ticking, so
-  // skipped items can be cycled through and checked/skipped on a later pass.
+  // Next unchecked item anywhere, scanning forward from (startPage, startItem)
+  // across the checklist pages and wrapping around the whole set. Returns
+  // { page, item } or null if nothing is unchecked anywhere.
+  function nextUncheckedGlobal(startPage, startItem) {
+    const total = CL_COUNT; // checklist pages occupy indices 0 .. CL_COUNT-1
+    const cur = state.checks[startPage];
+    // rest of the current page, below the cursor
+    for (let j = startItem + 1; j < cur.length; j++) {
+      if (!cur[j]) return { page: startPage, item: j };
+    }
+    // then following pages (wrapping), finishing with the head of the start
+    // page (items 0..startItem) so earlier skipped items are still reachable
+    for (let step = 1; step <= total; step++) {
+      const p = (startPage + step) % total;
+      const chk = state.checks[p];
+      const limit = (p === startPage) ? startItem + 1 : chk.length;
+      for (let j = 0; j < limit; j++) {
+        if (!chk[j]) return { page: p, item: j };
+      }
+    }
+    return null;
+  }
+
+  // ADV button: jump to the next unchecked item WITHOUT ticking. Moves down the
+  // current page and, once past its last unchecked item, carries on to the next
+  // page's first unchecked item (wrapping around all pages).
   function advAction() {
     const pi = state.page;
     if (pages[pi].type !== 'checklist') return;
-    const idx = activeIndex(pi);
-    if (idx === -1) return; // page already complete
-    cursors[pi] = nextUnchecked(pi, idx + 1);
-    render();
+    const found = nextUncheckedGlobal(pi, activeIndex(pi));
+    if (!found) return; // nothing unchecked anywhere
+    cursors[found.page] = found.item;
+    if (found.page !== pi) goTo(found.page);
+    else render();
   }
 
   // EICAS-style flow: when a checklist page completes, advance to the
