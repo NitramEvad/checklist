@@ -26,18 +26,18 @@ const CHECKLISTS = [
     title: "1 · FLIGHTDECK",
     items: [
       ["Battery", "~100%", "battery"],
-      ["Battery", "STOWED+CONNECTED"],
+      ["Battery cable", "CONNECTED"],
       ["Phone", "SECURE"],
       ["Phone Red Cable", "CONNECTED"],
-      ["Phone Power", "CHARGING/100%", "charging"],
+      ["Phone Power", "CHARGING+ >80%", "charging"],
       ["Phone Volume", "UNMUTED"],
+      ["Landscape", "SET"],
     ],
   },
   {
-    title: "2 · SYSTEMS",
+    title: "2 · ZELLO/AUDIO",
     items: [
-      ["Landscape", "SET"],
-      ["Spotify", "PLAY/PAUSE"],
+      ["Spotify", "PLAYLIST PLAY/PAUSE"],
       ["Zello", "ON"],
       ["Helmet PTT", "-"],
       ["Zello", "PTT-Z Connected"],
@@ -58,8 +58,8 @@ const CHECKLISTS = [
   {
     title: "4 · XCTRACK",
     items: [
-      ["XC Tracer", "ON / 5X"],
-      ["XC Tracer", "CONNECTED"],
+      ["XC Tracer", "ON / 5X BEEPS"],
+      ["XC Tracer/Track", "CONNECTED"],
       ["Task", "SET"],
       ["Airspace", "ACTIVATED"],
       ["Pages", "CHECKED"],
@@ -71,7 +71,7 @@ const CHECKLISTS = [
     title: "5 · HARNESS - 1",
     items: [
       ["Flightdeck", "ZIPPED"],
-      ["Radio Pocket", "CHOCS"],
+      ["Radio Pocket", "RADIO/FOOD"],
       ["Left Pocket", "X4 SECURE"],
       ["Right Pocket", "CHARTS"],
       ["Speed Arms", "STOWED"],
@@ -86,9 +86,7 @@ const CHECKLISTS = [
       ["Tow Bridle", "X2"],
       ["Wing", "ATTACHED"],
       ["Speedbar Maillons", "2X"],
-      ["Speedbar", "X2 + FREE"],
       ["Reserve Pins & Handle", "CHECKED"],
-      ["Lens Caps", "STOWED"],
       ["Radio", "ON + STOWED"],
       ["Lens Caps", "STOWED"],
     ],
@@ -98,11 +96,8 @@ const CHECKLISTS = [
     items: [
       ["Shoes", "FASTENED"],
       ["Pockets", "ZIPPED"],
-      ["PTT", "-"],
-      ["Mic", "POWER ON"],
       ["Clipped"],
-      ["Coms Check", "ECHO TEST"],
-      ["Zello", "CHANNEL SET"],
+      ["Coms Check", "TEST"],
     ],
   },
   {
@@ -110,10 +105,10 @@ const CHECKLISTS = [
     items: [
       ["Red Clips", "X2"],
       ["White Clip", "CLIPPED"],
-      ["Chest Clips", "X2"],
+      ["Waist Clips", "X2"],
       ["Flightdeck Clip", "CLIPPED"],
-      ["Speedbar", "FREE"],
       ["Maillons", "CLIPPED + FREE"],
+      ["Speedbar", "FREE"],
       ["Reserve", "STOWED"],
       ["Crabs", "CLIPPED + CLEAR"],
     ],
@@ -123,7 +118,6 @@ const CHECKLISTS = [
     items: [
       ["Shoes", "LACED"],
       ["Helmet", "CLIPPED"],
-      ["Coms Check", "CHECKED"],
       ["XC Tracer", "AUDIO ON"],
       ["XC Track", "LIVE"],
       ["Phone", "SECURE"],
@@ -145,6 +139,8 @@ const CHECKLISTS = [
 // ============================================================
 
 const NOTES_DEFAULT = `SITE NOTES
+Hill Farm Radio: 143.725
+
 1. Aston Down -> G: 3,600
 2. Cotswold <- CTR: 2,500
 3. Highgrove -> R: 2,000
