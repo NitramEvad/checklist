@@ -92,8 +92,36 @@
 
   // ---- checklist logic ----
 
-  const activeIndex  = pi => state.checks[pi].findIndex(v => !v); // -1 = complete
+  // Runtime highlight position ("cursor") for each page — normally the first
+  // unchecked item, but ADV can move it forward so you can skip items and come
+  // back to them. Not persisted; snaps back to the first unchecked on reload.
+  const cursors = pages.map(() => 0);
+
   const pageComplete = pi => pages[pi].type === 'checklist' && state.checks[pi].every(Boolean);
+
+  // Index of the next unchecked item at/after `from`, wrapping; -1 if none.
+  function nextUnchecked(pi, from) {
+    const chk = state.checks[pi];
+    const n = chk.length;
+    for (let k = 0; k < n; k++) {
+      const j = ((from % n) + n + k) % n;
+      if (!chk[j]) return j;
+    }
+    return -1;
+  }
+
+  // The highlighted item: the cursor if it still points at an unchecked item,
+  // otherwise the first unchecked item. -1 when the page is complete.
+  function activeIndex(pi) {
+    const chk = state.checks[pi];
+    if (chk.every(Boolean)) return -1;
+    let c = cursors[pi];
+    if (typeof c !== 'number' || c < 0 || c >= chk.length || chk[c]) {
+      c = chk.findIndex(v => !v);
+      cursors[pi] = c;
+    }
+    return c;
+  }
 
   function toggleItem(pi, ii) {
     state.checks[pi][ii] = !state.checks[pi][ii];
@@ -102,17 +130,29 @@
     maybeAdvance(pi);
   }
 
-  // CHECK button: tick the active item; on a completed checklist go to
-  // the next page; on data/music pages act as play/pause.
+  // CHECK button: tick the active item and move to the next unchecked item; on
+  // a completed checklist go to the next page; on data/music act as play/pause.
   function checkAction() {
     const pi = state.page;
     if (pages[pi].type !== 'checklist') { spCmd('toggle'); return; }
     const idx = activeIndex(pi);
     if (idx === -1) { go(1); return; }
     state.checks[pi][idx] = true;
+    cursors[pi] = nextUnchecked(pi, idx + 1);
     save();
     render();
     maybeAdvance(pi);
+  }
+
+  // ADV button: move the cursor to the next unchecked item WITHOUT ticking, so
+  // skipped items can be cycled through and checked/skipped on a later pass.
+  function advAction() {
+    const pi = state.page;
+    if (pages[pi].type !== 'checklist') return;
+    const idx = activeIndex(pi);
+    if (idx === -1) return; // page already complete
+    cursors[pi] = nextUnchecked(pi, idx + 1);
+    render();
   }
 
   // EICAS-style flow: when a checklist page completes, advance to the
@@ -137,6 +177,8 @@
     else                          renderMusic(c);
     $('#btnCheck').textContent =
       p.type === 'checklist' ? (pageComplete(state.page) ? 'NEXT ▶' : 'CHECK ✓') : '⏯';
+    // ADV (skip to next unchecked item) only makes sense on checklist pages.
+    $('#btnAdv').style.display = p.type === 'checklist' ? '' : 'none';
     tick();
   }
 
@@ -567,6 +609,7 @@
     $('#btnUp').addEventListener('click', () => go(-1));
     $('#btnDown').addEventListener('click', () => go(1));
     $('#btnCheck').addEventListener('click', checkAction);
+    $('#btnAdv').addEventListener('click', advAction);
     $('#spPrev').addEventListener('click', () => spCmd('prev', true));
     $('#spNext').addEventListener('click', () => spCmd('next', true));
     $('#spToggle').addEventListener('click', () => spCmd('toggle'));

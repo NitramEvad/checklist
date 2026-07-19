@@ -121,24 +121,31 @@ main {
 
 #rail {
   display: grid;
-  grid-template-rows: 1fr 1.2fr 1fr;
+  grid-auto-rows: 1fr; /* equal-height buttons whether 3 (data/music) or 4 (checklist) */
   gap: 6px;
   padding: 6px;
   border-left: 2px solid var(--line);
 }
 
 .railbtn {
-  font-size: clamp(22px, 6vh, 38px);
+  font-size: clamp(20px, 5.5vh, 36px);
   font-weight: 800;
   border-radius: 14px;
 }
 .railbtn.check {
   border-color: var(--grn);
   color: var(--grn);
-  font-size: clamp(15px, 3.8vh, 26px);
+  font-size: clamp(15px, 3.6vh, 25px);
   letter-spacing: 0.05em;
 }
 .railbtn.check:active { background: #103822; }
+.railbtn.adv {
+  border-color: var(--cyn);
+  color: var(--cyn);
+  font-size: clamp(14px, 3.4vh, 24px);
+  letter-spacing: 0.06em;
+}
+.railbtn.adv:active { background: #10303e; }
 
 /* ---------- checklist page ---------- */
 
