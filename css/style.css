@@ -38,7 +38,7 @@ body {
   height: 100vh;
   height: 100dvh;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
   overflow: hidden;
   touch-action: manipulation;
   user-select: none;
@@ -448,34 +448,6 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   user-select: text;
   -webkit-user-select: text;
 }
-
-/* ---------- footer (spotify bar) ---------- */
-
-footer {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 8px;
-  border-top: 2px solid var(--line);
-}
-
-.fbtn {
-  font-size: clamp(16px, 4.2vh, 26px);
-  padding: 0.1em 0.7em;
-  border-radius: 10px;
-}
-
-#spTrack {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: clamp(12px, 3vh, 18px);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-}
-#spTrack.warn { color: var(--amb); }
 
 /* ---------- toast ---------- */
 

@@ -15,12 +15,13 @@ screen width, XCTrack's own widgets filling the rest).
 - **▲ / ▼ buttons** cycle through all pages (checklists → flight data → music).
 - **FLIGHT DATA page** — local/UTC clock, stopwatch timer, GPS altitude,
   **QNH** and outside **temperature**. Tap the QNH tile to set it by hand.
-- **MUSIC page + persistent bottom bar** — previous / play-pause / next for
-  the Spotify app playing in the background, plus your **editable notes**
-  (tap, type, saved on the phone) beside the transport buttons. **Playback
-  control needs Spotify Premium** (a per-account tier — never shared via
-  Family/Duo); with Premium you can set `SHOW_TRACKLIST = true` in `js/app.js`
-  to replace the notes with a selectable track list of the current playlist.
+- **MUSIC page** — previous / play-pause / next for the Spotify app playing in
+  the background, plus your **editable notes** (tap, type, saved on the phone)
+  beside the transport buttons. Spotify controls live *only* here, so the
+  checklist pages stay focused on checklist items. **Playback control needs
+  Spotify Premium** (a per-account tier — never shared via Family/Duo); with
+  Premium you can set `SHOW_TRACKLIST = true` in `js/app.js` to replace the
+  notes with a selectable track list of the current playlist.
 - **Works offline, updates promptly** — it's a PWA with a network-first
   service worker: when you have a signal it loads the latest (so a checklist
   you edited and redeployed shows on the very next open); when you don't, it
@@ -75,11 +76,11 @@ request; when offline the bar shows `OFFLINE — NO MUSIC CONTROL`).
    `https://<username>.github.io/checklist/` — it must match exactly,
    including the trailing slash. Tick the *Web API* checkbox.
 3. Copy the app's **Client ID**.
-4. On the site, go to the **MUSIC** page (▼ past the data page, or tap the
-   Spotify text in the bottom bar), paste the Client ID, hit
-   **CONNECT SPOTIFY** and approve. Tokens refresh automatically after that.
-5. Start some music in the Spotify app, and the bottom bar controls it from
-   then on. If you see `NO DEVICE`, just open Spotify and press play once —
+4. On the site, go to the **MUSIC** page (cycle ▼ to the last page), paste the
+   Client ID, hit **CONNECT SPOTIFY** and approve. Tokens refresh automatically
+   after that.
+5. Start some music in the Spotify app, and the MUSIC page's buttons control it
+   from then on. If you see `NO DEVICE`, just open Spotify and press play once —
    the phone becomes the "active device".
 
 ## Customising the checklists
@@ -137,8 +138,8 @@ figure) — it shows amber while hand-set; clear it to return to automatic.
 | Tap any item | Toggle it (e.g. un-tick a mistake) |
 | RESET | Clear the current page (top-right of each checklist) |
 | RESET ALL CHECKLISTS | On the FLIGHT DATA page — do this before each flight |
-| ⏮ ⏯ ⏭ (bottom bar) | Spotify previous / play-pause / next, on every page |
-| On data & music pages | The big middle rail button becomes ⏯ play/pause |
+| ⏮ ⏯ ⏭ (MUSIC page) | Spotify previous / play-pause / next (Premium only) |
+| ⏯ (middle rail button) | On the MUSIC page only, play/pause; hidden on FLIGHT DATA |
 
 ## Local development
 

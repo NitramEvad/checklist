@@ -131,10 +131,12 @@
   }
 
   // CHECK button: tick the active item and move to the next unchecked item; on
-  // a completed checklist go to the next page; on data/music act as play/pause.
+  // a completed checklist go to the next page. On the MUSIC page it's play/pause;
+  // on other pages it does nothing (Spotify control lives only on MUSIC).
   function checkAction() {
     const pi = state.page;
-    if (pages[pi].type !== 'checklist') { spCmd('toggle'); return; }
+    const t = pages[pi].type;
+    if (t !== 'checklist') { if (t === 'music') spCmd('toggle'); return; }
     const idx = activeIndex(pi);
     if (idx === -1) { go(1); return; }
     state.checks[pi][idx] = true;
@@ -200,8 +202,18 @@
     if (p.type === 'checklist')   renderChecklist(c, state.page);
     else if (p.type === 'data') { renderData(c); startGeo(); }
     else                          renderMusic(c);
-    $('#btnCheck').textContent =
-      p.type === 'checklist' ? (pageComplete(state.page) ? 'NEXT ▶' : 'CHECK ✓') : '⏯';
+    // Middle rail button: CHECK/NEXT on checklists, play/pause on MUSIC, and
+    // nothing on FLIGHT DATA (Spotify control lives only on the MUSIC page).
+    const btnCheck = $('#btnCheck');
+    if (p.type === 'checklist') {
+      btnCheck.style.display = '';
+      btnCheck.textContent = pageComplete(state.page) ? 'NEXT ▶' : 'CHECK ✓';
+    } else if (p.type === 'music') {
+      btnCheck.style.display = '';
+      btnCheck.textContent = '⏯';
+    } else {
+      btnCheck.style.display = 'none';
+    }
     // ADV (skip to next unchecked item) only makes sense on checklist pages.
     $('#btnAdv').style.display = p.type === 'checklist' ? '' : 'none';
     tick();
@@ -337,10 +349,8 @@
       $('#mLogout').addEventListener('click', () => {
         Spotify.logout();
         render();
-        updateFooterIdle();
       });
-      refreshNowPlaying();
-      if (SHOW_TRACKLIST) refreshPlaylist();
+      if (SHOW_TRACKLIST) { refreshNowPlaying(); refreshPlaylist(); }
       else bindNotesEditor('mNotes', 'mNotesReset');
     } else {
       c.innerHTML = `
@@ -403,39 +413,29 @@
     return 'SPOTIFY ERROR (' + e.message + ')';
   }
 
-  function setSpStatus(txt, warn) {
-    const el = $('#spTrack');
-    el.textContent = txt;
-    el.classList.toggle('warn', !!warn);
-  }
-  function updateFooterIdle() {
-    setSpStatus(Spotify.connected() ? 'SPOTIFY: CONNECTED' : 'SPOTIFY: NOT CONNECTED — TAP HERE', false);
-  }
-
   async function spCmd(cmd, refreshList) {
     if (!Spotify.connected()) { goTo(MUSIC_PAGE); return; } // jump to MUSIC setup
     try {
       await Spotify[cmd]();
-      setTimeout(refreshNowPlaying, 700);
-      if (refreshList) setTimeout(refreshPlaylist, 800);
+      if (SHOW_TRACKLIST) {
+        setTimeout(refreshNowPlaying, 700);
+        if (refreshList) setTimeout(refreshPlaylist, 800);
+      }
     } catch (e) {
-      setSpStatus(spErrMsg(e), true);
+      toast(spErrMsg(e));
     }
   }
 
+  // Only relevant when the track list is shown (Premium) — keeps its "now
+  // playing" highlight in sync. No-op otherwise.
   let curUri = null;
   async function refreshNowPlaying() {
-    if (!Spotify.connected() || !navigator.onLine) return;
+    if (!SHOW_TRACKLIST || !Spotify.connected() || !navigator.onLine) return;
     try {
       const s = await Spotify.nowPlaying();
-      const txt = s ? (s.playing ? '▶ ' : '⏸ ') + s.track : 'NO ACTIVE DEVICE — OPEN SPOTIFY APP';
-      setSpStatus(txt, !s);
-      // keep the on-screen playlist's "now playing" highlight in sync
       const newUri = s ? s.uri : null;
       if (newUri !== curUri) { curUri = newUri; highlightCurrent(); }
-    } catch (e) {
-      setSpStatus(spErrMsg(e), true);
-    }
+    } catch (e) { /* ignore */ }
   }
 
   function highlightCurrent() {
@@ -471,7 +471,7 @@
             curUri = li.dataset.uri;
             highlightCurrent();
             setTimeout(refreshNowPlaying, 700);
-          } catch (e) { setSpStatus(spErrMsg(e), true); }
+          } catch (e) { toast(spErrMsg(e)); }
         }));
       // scroll the current track into view
       const cur = list.querySelector('li.cur');
@@ -635,10 +635,6 @@
     $('#btnDown').addEventListener('click', () => go(1));
     $('#btnCheck').addEventListener('click', checkAction);
     $('#btnAdv').addEventListener('click', advAction);
-    $('#spPrev').addEventListener('click', () => spCmd('prev', true));
-    $('#spNext').addEventListener('click', () => spCmd('next', true));
-    $('#spToggle').addEventListener('click', () => spCmd('toggle'));
-    $('#spTrack').addEventListener('click', () => goTo(MUSIC_PAGE));
     window.addEventListener('online', () => { updateNet(); refreshNowPlaying(); });
     window.addEventListener('offline', updateNet);
     document.addEventListener('keydown', e => {
@@ -673,11 +669,9 @@
       toast('SPOTIFY AUTH FAILED');
     }
     render();
-    updateFooterIdle();
-    refreshNowPlaying();
     primeWeather();
     setInterval(tick, 1000);
-    setInterval(refreshNowPlaying, 12000);
+    if (SHOW_TRACKLIST) setInterval(refreshNowPlaying, 12000);
     // Offline capability: cache the whole app on first visit.
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
