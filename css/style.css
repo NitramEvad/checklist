@@ -153,12 +153,18 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5em;
   padding-bottom: 0.25em;
 }
+.clbtns { display: flex; gap: 10px; flex: 0 0 auto; }
 .prog {
   font-weight: 800;
   letter-spacing: 0.08em;
   color: var(--dim);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: clamp(13px, 3.2vh, 20px);
 }
 .prog.ok { color: var(--grn); }

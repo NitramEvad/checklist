@@ -146,7 +146,7 @@ Your choice is saved on the phone.
 | ADV | Skip to the next unchecked item **without** ticking. Moves down the page and, once past its last unchecked item, carries on to the next page's first unchecked item (wrapping around all pages) — so you can cycle through everything you skipped |
 | Tap any item | Toggle it (e.g. un-tick a mistake) |
 | RESET | Clear the current page (top-right of each checklist) |
-| RESET ALL CHECKLISTS | On the FLIGHT DATA page — do this before each flight |
+| RESET ALL | Clear every checklist — on each checklist page's header, left of RESET (amber). Do this before each flight |
 | ⏮ ⏯ ⏭ (MUSIC page) | Spotify previous / play-pause / next (Premium only) |
 | ⏯ (middle rail button) | On the MUSIC page only, play/pause; hidden on FLIGHT DATA |
 

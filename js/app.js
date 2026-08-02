@@ -238,7 +238,10 @@
         <span class="prog ${act === -1 ? 'ok' : ''}">
           ${act === -1 ? 'PAGE COMPLETE ✓' : done + ' / ' + chk.length}
         </span>
-        <button class="minibtn" id="resetPage">RESET</button>
+        <div class="clbtns">
+          <button class="minibtn warn" id="resetAll">RESET ALL</button>
+          <button class="minibtn" id="resetPage">RESET</button>
+        </div>
       </div>
       <ul class="cl">
         ${p.items.map((it, i) => {
@@ -258,10 +261,22 @@
       li.addEventListener('click', () => toggleItem(pi, Number(li.dataset.i))));
     $('#resetPage').addEventListener('click', () => {
       state.checks[pi] = p.items.map(() => false);
+      cursors[pi] = 0;
       save();
       render();
     });
+    $('#resetAll').addEventListener('click', resetAllChecklists);
     updateLiveItems();
+  }
+
+  // Clear every checklist page (available on each checklist page's header).
+  function resetAllChecklists() {
+    pages.forEach((p, i) => {
+      if (p.type === 'checklist') { state.checks[i] = p.items.map(() => false); cursors[i] = 0; }
+    });
+    save();
+    render();
+    toast('ALL CHECKLISTS RESET');
   }
 
   // Refresh every live reading currently on screen (battery %, charging…).
@@ -290,7 +305,6 @@
       </div>
       <div class="drow">
         <span class="dim" id="dGps">GPS: waiting for fix…</span>
-        <button class="minibtn warn" id="resetAll">RESET ALL CHECKLISTS</button>
       </div>`;
     $('#tStart').addEventListener('click', () => {
       if (state.timerStart) {
@@ -307,14 +321,6 @@
       state.timerAcc = 0;
       save();
       tick();
-    });
-    $('#resetAll').addEventListener('click', () => {
-      pages.forEach((p, i) => {
-        if (p.type === 'checklist') state.checks[i] = p.items.map(() => false);
-      });
-      save();
-      renderDots();
-      toast('ALL CHECKLISTS RESET');
     });
     // Tap the ALT GPS tile to cycle its units: AUTO → M → FT.
     $('#tileAlt').addEventListener('click', () => {
