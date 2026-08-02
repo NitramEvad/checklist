@@ -82,8 +82,14 @@ request; when offline the bar shows `OFFLINE — NO MUSIC CONTROL`).
    Client ID, hit **CONNECT SPOTIFY** and approve. Tokens refresh automatically
    after that.
 5. Start some music in the Spotify app, and the MUSIC page's buttons control it
-   from then on. If you see `NO DEVICE`, just open Spotify and press play once —
-   the phone becomes the "active device".
+   from then on.
+
+Spotify's API only controls an **active device**. When the app goes idle it
+stops being "active", which is why bare controllers report `NO DEVICE`. Pressing
+play here now handles that: if nothing is active it looks up your available
+devices and transfers playback to the phone (what you'd otherwise do by hand).
+If Spotify is fully closed there's no device to wake — tap **OPEN ♫** (the
+middle rail button on the MUSIC page) to jump to the app, then press play.
 
 ## Customising the checklists
 
@@ -147,8 +153,8 @@ Your choice is saved on the phone.
 | Tap any item | Toggle it (e.g. un-tick a mistake) |
 | RESET | Clear the current page (top-right of each checklist) |
 | RESET ALL | Clear every checklist — on each checklist page's header, left of RESET (amber). Do this before each flight |
-| ⏮ ⏯ ⏭ (MUSIC page) | Spotify previous / play-pause / next (Premium only) |
-| ⏯ (middle rail button) | On the MUSIC page only, play/pause; hidden on FLIGHT DATA |
+| ⏮ ⏯ ⏭ (MUSIC page, left) | Spotify previous / play-pause / next (Premium only) |
+| OPEN ♫ (middle rail button) | On the MUSIC page only, opens the Spotify app; hidden on FLIGHT DATA |
 
 ## Local development
 

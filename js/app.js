@@ -131,12 +131,12 @@
   }
 
   // CHECK button: tick the active item and move to the next unchecked item; on
-  // a completed checklist go to the next page. On the MUSIC page it's play/pause;
-  // on other pages it does nothing (Spotify control lives only on MUSIC).
+  // a completed checklist go to the next page. On the MUSIC page it opens the
+  // Spotify app (play/pause is the left button); it does nothing elsewhere.
   function checkAction() {
     const pi = state.page;
     const t = pages[pi].type;
-    if (t !== 'checklist') { if (t === 'music') spCmd('toggle'); return; }
+    if (t !== 'checklist') { if (t === 'music') openSpotify(); return; }
     const idx = activeIndex(pi);
     if (idx === -1) { go(1); return; }
     state.checks[pi][idx] = true;
@@ -202,15 +202,17 @@
     if (p.type === 'checklist')   renderChecklist(c, state.page);
     else if (p.type === 'data') { renderData(c); startGeo(); }
     else                          renderMusic(c);
-    // Middle rail button: CHECK/NEXT on checklists, play/pause on MUSIC, and
-    // nothing on FLIGHT DATA (Spotify control lives only on the MUSIC page).
+    // Middle rail button: CHECK/NEXT on checklists, OPEN SPOTIFY on MUSIC (its
+    // play/pause is the left button), and nothing on FLIGHT DATA.
     const btnCheck = $('#btnCheck');
     if (p.type === 'checklist') {
       btnCheck.style.display = '';
+      btnCheck.className = 'railbtn check';
       btnCheck.textContent = pageComplete(state.page) ? 'NEXT ▶' : 'CHECK ✓';
     } else if (p.type === 'music') {
       btnCheck.style.display = '';
-      btnCheck.textContent = '⏯';
+      btnCheck.className = 'railbtn open';
+      btnCheck.innerHTML = 'OPEN<br>♫';
     } else {
       btnCheck.style.display = 'none';
     }
@@ -436,6 +438,13 @@
     } catch (e) {
       toast(spErrMsg(e));
     }
+  }
+
+  // Jump to the Spotify app (Android handles the spotify: scheme). Handy to
+  // wake it or pick a playlist; the transport buttons here control it after.
+  function openSpotify() {
+    toast('OPENING SPOTIFY…');
+    window.location.href = 'spotify://';
   }
 
   // Only relevant when the track list is shown (Premium) — keeps its "now

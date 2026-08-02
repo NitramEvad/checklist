@@ -121,13 +121,43 @@ const Spotify = (() => {
 
   // ---- player controls ----
 
-  const next = () => api('/me/player/next', 'POST');
-  const prev = () => api('/me/player/previous', 'POST');
+  // Pick a device to control: the active one, else any available device (the
+  // phone's Spotify app is listed even when idle / not the active device).
+  async function pickDevice() {
+    const d = await (await api('/me/player/devices')).json();
+    const list = (d && d.devices) || [];
+    return list.find(x => x.is_active) || list[0] || null;
+  }
+
+  // Wake an idle device: transfer playback to it and start playing. This is
+  // what the user otherwise does by hand (open Spotify, press play).
+  async function activateAndPlay() {
+    const dev = await pickDevice();
+    if (!dev) throw new Error('NO_DEVICE');
+    await api('/me/player', 'PUT', { device_ids: [dev.id], play: true });
+  }
+
+  // A skip that first wakes an idle device if the API reports none active.
+  async function skip(path) {
+    try {
+      await api(path, 'POST');
+    } catch (e) {
+      if (e.message !== 'NO_DEVICE') throw e;
+      await activateAndPlay();
+      await api(path, 'POST');
+    }
+  }
+
+  const next = () => skip('/me/player/next');
+  const prev = () => skip('/me/player/previous');
 
   async function toggle() {
-    const state = await nowPlaying();
-    if (!state) throw new Error('NO_DEVICE');
-    await api('/me/player/' + (state.playing ? 'pause' : 'play'), 'PUT');
+    const res = await api('/me/player');
+    // 204 (or a payload with no device) = nothing active → wake a device & play.
+    if (res.status === 204) { await activateAndPlay(); return; }
+    const j = await res.json();
+    if (!j || !j.device) { await activateAndPlay(); return; }
+    await api('/me/player/' + (j.is_playing ? 'pause' : 'play'), 'PUT');
   }
 
   // Play a specific track. Within a playlist/album we pass its context so
