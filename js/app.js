@@ -284,7 +284,7 @@
             <button class="minibtn" id="tReset">RESET</button>
           </div>
         </div>
-        <div class="tile"><div class="tl">ALT GPS</div><div class="tv" id="dAlt">—</div></div>
+        <div class="tile" id="tileAlt"><div class="tl">ALT GPS <span id="altMode" class="unittag"></span></div><div class="tv" id="dAlt">—</div></div>
         <div class="tile" id="tileQnh"><div class="tl">QNH ⤶</div><div class="tv" id="dQnh">—</div></div>
         <div class="tile"><div class="tl">TEMP</div><div class="tv" id="dTemp">—</div></div>
       </div>
@@ -315,6 +315,12 @@
       save();
       renderDots();
       toast('ALL CHECKLISTS RESET');
+    });
+    // Tap the ALT GPS tile to cycle its units: AUTO → M → FT.
+    $('#tileAlt').addEventListener('click', () => {
+      AltUnit.cycle();
+      updateGeo();
+      toast('ALT UNITS: ' + AltUnit.get().toUpperCase());
     });
     // Tap the QNH tile to set it by hand (like winding an altimeter);
     // blank clears the manual value and returns to the auto weather reading.
@@ -593,10 +599,37 @@
   function stopGeo() {
     if (geoId !== null) { navigator.geolocation.clearWatch(geoId); geoId = null; }
   }
+
+  // Altitude units. Mode: 'auto' | 'm' | 'ft'. AUTO reads feet inside the UK/US
+  // (where aviation altitude is flown in feet) and metres elsewhere, deduced
+  // from the current GPS position — so it follows you between England and
+  // Europe. Tap the ALT GPS tile to cycle AUTO → M → FT.
+  const AltUnit = (() => {
+    const KEY = 'pfc.altunit';
+    const get = () => localStorage.getItem(KEY) || 'auto';
+    const set = v => localStorage.setItem(KEY, v);
+    const autoFor = c => {
+      if (!c) return 'm';
+      const inUK = c.latitude >= 49.8 && c.latitude <= 61.1 && c.longitude >= -8.7 && c.longitude <= 2.1;
+      const inUS = c.latitude >= 24.4 && c.latitude <= 49.5 && c.longitude >= -125 && c.longitude <= -66.5;
+      return (inUK || inUS) ? 'ft' : 'm';
+    };
+    const resolved = c => { const m = get(); return (m === 'm' || m === 'ft') ? m : autoFor(c); };
+    return {
+      get,
+      cycle: () => { const o = ['auto', 'm', 'ft']; set(o[(o.indexOf(get()) + 1) % o.length]); },
+      fmt: (metres, c) => metres == null ? '—'
+        : resolved(c) === 'ft' ? Math.round(metres * 3.28084) + ' ft'
+        : Math.round(metres) + ' m',
+    };
+  })();
+
   function updateGeo() {
+    const tag = document.querySelector('#altMode');
+    if (tag) tag.textContent = AltUnit.get().toUpperCase();
     if (!lastFix) return;
     const c = lastFix.coords;
-    setTxt('#dAlt', c.altitude == null ? '—' : Math.round(c.altitude) + ' m');
+    setTxt('#dAlt', AltUnit.fmt(c.altitude, c));
     setTxt('#dGps', 'GPS: fix ±' + Math.round(c.accuracy) + ' m');
   }
 

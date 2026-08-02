@@ -14,7 +14,9 @@ screen width, XCTrack's own widgets filling the rest).
   (actual %) and `charging` (CHG / ON BATT). See "Customising the checklists".
 - **▲ / ▼ buttons** cycle through all pages (checklists → flight data → music).
 - **FLIGHT DATA page** — local/UTC clock, stopwatch timer, GPS altitude,
-  **QNH** and outside **temperature**. Tap the QNH tile to set it by hand.
+  **QNH** and outside **temperature**. Tap the QNH tile to set it by hand; tap
+  the ALT GPS tile to cycle its units (AUTO / metres / feet — AUTO reads feet
+  in the UK/US and metres elsewhere, from your GPS position).
 - **MUSIC page** — previous / play-pause / next for the Spotify app playing in
   the background, plus your **editable notes** (tap, type, saved on the phone)
   beside the transport buttons. Spotify controls live *only* here, so the
@@ -127,7 +129,14 @@ page, so the FLIGHT DATA page reads them from a free, keyless weather service
 offline use. **Tap the QNH tile** to enter a value by hand (e.g. the tower/ATIS
 figure) — it shows amber while hand-set; clear it to return to automatic.
 
-## Using it
+### Altitude units
+
+XCTrack doesn't expose its unit setting to a web widget, so the ALT GPS tile
+has its own. **Tap it** to cycle `AUTO → M → FT` (the current mode shows next
+to the label). **AUTO** reads feet inside the UK/US bounding boxes — where
+aviation altitude is flown in feet — and metres elsewhere, deduced live from
+your GPS position, so it follows you between England and continental Europe.
+Your choice is saved on the phone.
 
 | Control | Action |
 | --- | --- |

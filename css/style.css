@@ -294,8 +294,14 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   color: var(--cyn);
 }
 .tile .trow { display: flex; gap: 6px; }
-#tileQnh { cursor: pointer; }
+#tileQnh, #tileAlt { cursor: pointer; }
 #tileQnh .tv.manual { color: var(--amb); } /* amber = hand-set QNH */
+.unittag {
+  font-size: 0.8em;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--cyn);
+}
 
 .drow {
   display: flex;
