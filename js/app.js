@@ -242,14 +242,15 @@
       <ul class="cl">
         ${p.items.map((it, i) => {
           // item is "text" | ["Challenge","RESPONSE"] | ["Challenge","RESPONSE","live"]
+          // RESPONSE may be "" to show just a live reading with no target text.
           const [lbl, resp, live] = Array.isArray(it) ? it : [it, '', ''];
           return `
           <li class="${chk[i] ? 'done' : (i === act ? 'active' : '')}" data-i="${i}">
             <span class="box">${chk[i] ? '✓' : (i === act ? '▶' : '')}</span>
             <span class="lbl">${esc(lbl)}</span>
-            ${resp ? `<span class="leader"></span>
+            ${(resp || live) ? `<span class="leader"></span>
               ${live ? `<span class="live" data-live="${esc(live)}">—</span>` : ''}
-              <span class="resp">${esc(resp)}</span>` : ''}
+              ${resp ? `<span class="resp">${esc(resp)}</span>` : ''}` : ''}
           </li>`;
         }).join('')}
       </ul>`;
