@@ -440,11 +440,21 @@
     }
   }
 
-  // Jump to the Spotify app (Android handles the spotify: scheme). Handy to
-  // wake it or pick a playlist; the transport buttons here control it after.
+  // Try to launch the Spotify Android app. XCTrack's WebView won't hand a bare
+  // "spotify://" URL to Android (it tries to load it as a page), so we fire an
+  // Android "intent://" that names the package, via a hidden iframe — that way
+  // a failure stays contained instead of replacing the checklist with an error.
   function openSpotify() {
     toast('OPENING SPOTIFY…');
-    window.location.href = 'spotify://';
+    const tryUrl = url => {
+      const f = document.createElement('iframe');
+      f.style.display = 'none';
+      f.src = url;
+      document.body.appendChild(f);
+      setTimeout(() => f.remove(), 1500);
+    };
+    // Launch the Spotify app's main activity by package name.
+    tryUrl('intent://#Intent;package=com.spotify.music;action=android.intent.action.MAIN;end');
   }
 
   // Only relevant when the track list is shown (Premium) — keeps its "now
