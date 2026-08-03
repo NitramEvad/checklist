@@ -122,10 +122,12 @@ MUSIC transport buttons all shift right together).
 
 The **MUSIC page** holds free-text notes beside the transport buttons. You can
 **edit them on the hill** — tap the text, type, and it saves to the phone
-immediately (survives reloads and works offline). To pre-write a default, edit
-`NOTES_DEFAULT` at the bottom of [`js/checklists.js`](js/checklists.js);
-**RESET** on the MUSIC page restores it. On-device edits always take priority
-over the default until you reset.
+immediately (survives reloads and works offline). Use the **▲/▼ buttons to the
+right of the notes** to scroll long notes (touch-dragging inside the box is
+unreliable in XCTrack's WebView). To pre-write a default, edit `NOTES_DEFAULT`
+at the bottom of [`js/checklists.js`](js/checklists.js); **RESET** on the MUSIC
+page restores it. On-device edits always take priority over the default until
+you reset.
 
 ### QNH & temperature
 

@@ -297,16 +297,17 @@
         <div class="tile"><div class="tl">UTC</div><div class="tv" id="dUtc">--:--</div></div>
         <div class="tile"><div class="tl">TIMER</div><div class="tv" id="dTimer">0:00</div>
           <div class="trow">
-            <button class="minibtn" id="tStart">START</button>
-            <button class="minibtn" id="tReset">RESET</button>
+            <button class="minibtn tbig" id="tStart">START</button>
+            <button class="minibtn tbig" id="tReset">RESET</button>
           </div>
         </div>
-        <div class="tile" id="tileAlt"><div class="tl">ALT GPS <span id="altMode" class="unittag"></span></div><div class="tv" id="dAlt">—</div></div>
+        <div class="tile" id="tileAlt">
+          <div class="tl">ALT GPS <span id="altMode" class="unittag"></span></div>
+          <div class="tv" id="dAlt">—</div>
+          <div class="tsub" id="dGps">GPS: waiting…</div>
+        </div>
         <div class="tile" id="tileQnh"><div class="tl">QNH ⤶</div><div class="tv" id="dQnh">—</div></div>
         <div class="tile"><div class="tl">TEMP</div><div class="tv" id="dTemp">—</div></div>
-      </div>
-      <div class="drow">
-        <span class="dim" id="dGps">GPS: waiting for fix…</span>
       </div>`;
     $('#tStart').addEventListener('click', () => {
       if (state.timerStart) {
@@ -388,17 +389,22 @@
 
   // ---- notes page ----
 
-  // Reusable editable-notes block — shared by the NOTES page and (when there's
-  // no Spotify Premium) the MUSIC page. Both edit the same stored text, so they
-  // always show the same notes.
+  // Editable-notes block for the MUSIC page. Includes ▲/▼ scroll buttons since
+  // touch-dragging inside the textarea isn't reliable in XCTrack's WebView.
   const notesEditorHtml = (taId, resetId, header) => `
     <div class="notes">
       <div class="clhead">
         <span class="prog">${header}</span>
         <button class="minibtn warn" id="${resetId}">RESET</button>
       </div>
-      <textarea id="${taId}" class="notesArea" spellcheck="false"
-        placeholder="Your notes…">${esc(getNotes())}</textarea>
+      <div class="notesbody">
+        <textarea id="${taId}" class="notesArea" spellcheck="false"
+          placeholder="Your notes…">${esc(getNotes())}</textarea>
+        <div class="nscroll">
+          <button class="nbtn" id="${taId}Up" aria-label="scroll notes up">▲</button>
+          <button class="nbtn" id="${taId}Down" aria-label="scroll notes down">▼</button>
+        </div>
+      </div>
     </div>`;
 
   function bindNotesEditor(taId, resetId) {
@@ -409,6 +415,9 @@
       localStorage.removeItem(NOTES_KEY);
       ta.value = getNotes();
     });
+    const scrollBy = dir => () => { ta.scrollTop += dir * ta.clientHeight * 0.6; };
+    $('#' + taId + 'Up').addEventListener('click', scrollBy(-1));
+    $('#' + taId + 'Down').addEventListener('click', scrollBy(1));
   }
 
   // Read-only notes, shown in the track-list area only when SHOW_TRACKLIST is
@@ -655,7 +664,7 @@
     if (!lastFix) return;
     const c = lastFix.coords;
     setTxt('#dAlt', AltUnit.fmt(c.altitude, c));
-    setTxt('#dGps', 'GPS: fix ±' + Math.round(c.accuracy) + ' m');
+    setTxt('#dGps', 'FIX ±' + Math.round(c.accuracy) + ' m');
   }
 
   function updateWeather() {

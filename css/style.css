@@ -276,10 +276,11 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: 1fr 1fr;
+  /* 2 wide columns × 3 rows: fewer, larger boxes for easier reading */
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   gap: 6px;
-  padding-left: var(--cam-inset); /* keep LOCAL / ALT GPS clear of the camera */
+  padding-left: var(--cam-inset); /* keep the left column clear of the camera */
 }
 
 .tile {
@@ -291,23 +292,33 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 0.15em;
+  gap: 0.2em;
   min-height: 0;
   overflow: hidden;
 }
 .tile .tl {
   color: var(--dim);
-  font-size: clamp(10px, 2.4vh, 15px);
+  font-size: clamp(15px, 4vh, 24px);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
 }
 .tile .tv {
-  font-size: clamp(20px, 6vh, 40px);
+  font-size: clamp(30px, 11vh, 64px);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+  line-height: 1.02;
+  white-space: nowrap;
   color: var(--cyn);
 }
-.tile .trow { display: flex; gap: 6px; }
+.tile .tsub {
+  color: var(--dim);
+  font-size: clamp(14px, 3.4vh, 22px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.tile .trow { display: flex; gap: 8px; margin-top: 0.15em; }
+.tile .trow .minibtn { font-size: clamp(14px, 3.8vh, 24px); padding: 0.45em 1em; }
 #tileQnh, #tileAlt { cursor: pointer; }
 #tileQnh .tv.manual { color: var(--amb); } /* amber = hand-set QNH */
 .unittag {
@@ -439,10 +450,16 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   flex-direction: column;
   gap: 0.3em;
 }
-.notesArea {
+.notesbody {
   flex: 1;
   min-height: 0;
-  width: 100%;
+  display: flex;
+  gap: 6px;
+}
+.notesArea {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   resize: none;
   background: var(--panel);
   border: 1px solid var(--line);
@@ -457,6 +474,22 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   white-space: pre-wrap;
 }
 .notesArea:focus { outline: none; border-color: var(--cyn); }
+
+/* ▲/▼ buttons to scroll the notes (touch-drag is unreliable in the WebView) */
+.nscroll {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nbtn {
+  width: clamp(40px, 9vw, 56px);
+  flex: 1;
+  font-size: clamp(18px, 5vh, 30px);
+  font-weight: 800;
+  border-radius: 10px;
+}
+.nbtn:active { background: #16303e; }
 
 .music input {
   background: var(--panel);
