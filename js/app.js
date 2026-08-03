@@ -424,7 +424,7 @@
 
   function spErrMsg(e) {
     if (!navigator.onLine)                return 'OFFLINE — NO MUSIC CONTROL';
-    if (e.message === 'NO_DEVICE')        return 'NO DEVICE — OPEN SPOTIFY APP FIRST';
+    if (e.message === 'NO_DEVICE')        return 'NO DEVICE — PRESS PLAY IN SPOTIFY ONCE';
     if (e.message === 'PREMIUM_REQUIRED') return 'SPOTIFY PREMIUM REQUIRED';
     if (e.message === 'NOT_CONNECTED')    return 'SPOTIFY: NOT CONNECTED';
     return 'SPOTIFY ERROR (' + e.message + ')';
