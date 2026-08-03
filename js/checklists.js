@@ -25,11 +25,12 @@ const CHECKLISTS = [
   {
     title: "1 · FLIGHTDECK",
     items: [
-      ["Battery", "~100%", "battery"],
-      ["Battery cable", "CONNECTED"],
+      ["Powerbank", ">90%"],
+      ["Red Cable -> Powerbank", "CONNECTED"],
       ["Phone", "SECURE"],
-      ["Phone Red Cable", "CONNECTED"],
-      ["Phone Power", "CHARGING+ >80%", "charging"],
+      ["Red Cable -> Phone", "CONNECTED"],
+      ["Battery", ">90%", "battery"],
+      ["Phone Power", "", "charging"],
       ["Phone Volume", "UNMUTED"],
       ["Landscape", "SET"],
     ],
@@ -44,6 +45,7 @@ const CHECKLISTS = [
       ["Mic", "POWER ON"],
       ["Zello ECHO", "TEST"],
       ["Zello Channel", "SET"],
+      ["Dead Cat", "SECURE"],
     ],
   },
   {
@@ -51,6 +53,7 @@ const CHECKLISTS = [
     items: [
       ["X4", "SECURED"],
       ["X4 Battery", "FULL"],
+      ["X4 Lens", "CLEAN"],
       ["X4 Lens cap", "STOWED"],
       ["X4 Mufflers", "BOTH"],
     ],
@@ -96,7 +99,7 @@ const CHECKLISTS = [
     items: [
       ["Shoes", "FASTENED"],
       ["Pockets", "ZIPPED"],
-      ["Clipped"],
+      ["Helmet", "FASTENED"],
       ["Coms Check", "TEST"],
     ],
   },
@@ -116,7 +119,7 @@ const CHECKLISTS = [
   {
     title: "9 · FINAL · GENERAL",
     items: [
-      ["Shoes", "LACED"],
+      ["Shoes", "CHECK"],
       ["Helmet", "CLIPPED"],
       ["XC Tracer", "AUDIO ON"],
       ["XC Track", "LIVE"],
@@ -141,6 +144,9 @@ const CHECKLISTS = [
 const NOTES_DEFAULT = `SITE NOTES
 Hill Farm Radio: 143.725
 
+MALVERN->CAMBRIDGE
+
+LEKHAMPTON->CORFE
 1. Aston Down -> G: 3,600
 2. Cotswold <- CTR: 2,500
 3. Highgrove -> R: 2,000
