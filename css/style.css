@@ -102,6 +102,17 @@ header {
 #net.ok  { color: var(--grn); }
 #net.off { color: var(--red); }
 
+#btnRefresh {
+  background: none;
+  border: none;
+  color: var(--dim);
+  font-size: 1.15em;
+  line-height: 1;
+  padding: 0 0.1em;
+  cursor: pointer;
+}
+#btnRefresh:active { color: var(--cyn); }
+
 /* ---------- main layout ---------- */
 
 main {

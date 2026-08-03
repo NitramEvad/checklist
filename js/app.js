@@ -679,6 +679,26 @@
     el.title = navigator.onLine ? 'online' : 'offline (checklist still works)';
   }
 
+  // Force the very latest version: drop the service worker + all caches, then
+  // reload past the WebView's HTTP cache. Lets you pull a new deploy without
+  // clearing all of XCTrack's data (which would log you out of every widget).
+  async function forceRefresh() {
+    if (!navigator.onLine) { toast('OFFLINE — CONNECT TO UPDATE'); return; }
+    toast('UPDATING…');
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+      if (window.caches) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+    } catch (e) { /* best effort */ }
+    // Cache-busting query forces the WebView to re-fetch the document itself.
+    location.replace(location.pathname + '?u=' + Date.now());
+  }
+
   // ---- wiring ----
 
   function bindUI() {
@@ -686,6 +706,7 @@
     $('#btnDown').addEventListener('click', () => go(1));
     $('#btnCheck').addEventListener('click', checkAction);
     $('#btnAdv').addEventListener('click', advAction);
+    $('#btnRefresh').addEventListener('click', forceRefresh);
     window.addEventListener('online', () => { updateNet(); refreshNowPlaying(); });
     window.addEventListener('offline', updateNet);
     document.addEventListener('keydown', e => {

@@ -115,10 +115,17 @@ ticks.
 
 **How your phone picks up edits:** commit to `main` → GitHub Actions
 redeploys (~1 min) → the widget shows the new version the next time it loads
-**with a signal** (the service worker is network-first, so no manual refresh
-or cache-clearing). If you're offline it keeps showing the last version it
-cached. You do **not** need to bump `CACHE_VERSION` in [`sw.js`](sw.js) for
-content edits — that's only a lever to force every client to drop its cache.
+**with a signal** (the service worker is network-first and revalidates every
+file with the server, so no manual cache-clearing). If you're offline it keeps
+showing the last version it cached. You do **not** need to bump `CACHE_VERSION`
+in [`sw.js`](sw.js) for content edits — that's only a lever to force every
+client to drop its cache.
+
+**The ⟳ button (top-right of the header)** forces the very latest version on
+demand: it drops the service worker and all caches and reloads past the
+browser cache. Use it if a WebView (e.g. XCTrack's) is being stubborn about
+updating — it pulls the new deploy **without** clearing all of XCTrack's data,
+so you don't get logged out of your other widgets.
 
 If the front-camera punch-hole obscures anything on the left, adjust
 `--cam-inset` at the top of [`css/style.css`](css/style.css) — it reserves a

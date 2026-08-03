@@ -16,7 +16,7 @@
 //  only if you ever want to force every client to drop its cache.
 // ============================================================
 
-const CACHE_VERSION = 'pfc-v4';
+const CACHE_VERSION = 'pfc-v5';
 const NET_TIMEOUT = 2500; // ms before falling back to cache when online-but-slow
 
 const ASSETS = [
@@ -67,7 +67,11 @@ self.addEventListener('fetch', e => {
       caches.match(e.request, matchOpts).then(c => done(c));
     }, NET_TIMEOUT);
 
-    fetch(e.request).then(res => {
+    // `cache: 'no-cache'` forces a revalidation with the server (via ETag)
+    // rather than silently reusing the WebView's HTTP cache — otherwise
+    // GitHub Pages' max-age would keep serving stale files for ~10 min and
+    // network-first wouldn't actually see fresh deploys.
+    fetch(e.request.url, { cache: 'no-cache' }).then(res => {
       clearTimeout(timer);
       if (res && res.ok) {
         // Clone NOW, before the body streams to the page — cloning later
