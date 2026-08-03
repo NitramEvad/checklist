@@ -146,14 +146,6 @@ main {
   letter-spacing: 0.06em;
 }
 .railbtn.adv:active { background: #10303e; }
-.railbtn.open {
-  border-color: var(--grn);
-  color: var(--grn);
-  font-size: clamp(13px, 3.2vh, 22px);
-  line-height: 1.15;
-  letter-spacing: 0.04em;
-}
-.railbtn.open:active { background: #103822; }
 
 /* ---------- checklist page ---------- */
 

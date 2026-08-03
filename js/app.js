@@ -131,12 +131,10 @@
   }
 
   // CHECK button: tick the active item and move to the next unchecked item; on
-  // a completed checklist go to the next page. On the MUSIC page it opens the
-  // Spotify app (play/pause is the left button); it does nothing elsewhere.
+  // a completed checklist go to the next page. Does nothing on other pages.
   function checkAction() {
     const pi = state.page;
-    const t = pages[pi].type;
-    if (t !== 'checklist') { if (t === 'music') openSpotify(); return; }
+    if (pages[pi].type !== 'checklist') return;
     const idx = activeIndex(pi);
     if (idx === -1) { go(1); return; }
     state.checks[pi][idx] = true;
@@ -202,17 +200,13 @@
     if (p.type === 'checklist')   renderChecklist(c, state.page);
     else if (p.type === 'data') { renderData(c); startGeo(); }
     else                          renderMusic(c);
-    // Middle rail button: CHECK/NEXT on checklists, OPEN SPOTIFY on MUSIC (its
-    // play/pause is the left button), and nothing on FLIGHT DATA.
+    // Middle rail button: CHECK/NEXT on checklists only; hidden elsewhere
+    // (MUSIC has its own transport buttons; FLIGHT DATA needs no middle button).
     const btnCheck = $('#btnCheck');
     if (p.type === 'checklist') {
       btnCheck.style.display = '';
       btnCheck.className = 'railbtn check';
       btnCheck.textContent = pageComplete(state.page) ? 'NEXT ▶' : 'CHECK ✓';
-    } else if (p.type === 'music') {
-      btnCheck.style.display = '';
-      btnCheck.className = 'railbtn open';
-      btnCheck.innerHTML = 'OPEN<br>♫';
     } else {
       btnCheck.style.display = 'none';
     }
@@ -449,22 +443,6 @@
     }
   }
 
-  // Try to launch the Spotify Android app. XCTrack's WebView won't hand a bare
-  // "spotify://" URL to Android (it tries to load it as a page), so we fire an
-  // Android "intent://" that names the package, via a hidden iframe — that way
-  // a failure stays contained instead of replacing the checklist with an error.
-  function openSpotify() {
-    toast('OPENING SPOTIFY…');
-    const tryUrl = url => {
-      const f = document.createElement('iframe');
-      f.style.display = 'none';
-      f.src = url;
-      document.body.appendChild(f);
-      setTimeout(() => f.remove(), 1500);
-    };
-    // Launch the Spotify app's main activity by package name.
-    tryUrl('intent://#Intent;package=com.spotify.music;action=android.intent.action.MAIN;end');
-  }
 
   // Only relevant when the track list is shown (Premium) — keeps its "now
   // playing" highlight in sync. No-op otherwise.

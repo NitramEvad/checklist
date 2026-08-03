@@ -85,11 +85,18 @@ request; when offline the bar shows `OFFLINE — NO MUSIC CONTROL`).
    from then on.
 
 Spotify's API only controls an **active device**. When the app goes idle it
-stops being "active", which is why bare controllers report `NO DEVICE`. Pressing
-play here now handles that: if nothing is active it looks up your available
-devices and transfers playback to the phone (what you'd otherwise do by hand).
-If Spotify is fully closed there's no device to wake — tap **OPEN ♫** (the
-middle rail button on the MUSIC page) to jump to the app, then press play.
+disconnects from Spotify Connect and drops off the device list, so control
+reports `NO DEVICE` until you bring Spotify back to the foreground and play
+something. Pressing play here tries to wake an available device first, but if
+the app has fully dropped off Connect there's nothing to wake — this is a
+Spotify limitation, not tied to the app. Two things keep it working: keep a
+track actually *playing* (a playing device stays on Connect; a long pause is
+what drops it off), and set Android → Apps → Spotify → Battery → *Unrestricted*
+so Android doesn't suspend it in the background.
+
+(There's no reliable way to launch the Spotify app from inside XCTrack's
+WebView — it blocks app-launch URLs — so there's no in-widget "open Spotify"
+button. Switch to Spotify via Android's recent-apps if it has fully closed.)
 
 ## Customising the checklists
 
@@ -156,7 +163,6 @@ Your choice is saved on the phone.
 | RESET | Clear the current page (top-right of each checklist) |
 | RESET ALL | Clear every checklist — on each checklist page's header, left of RESET (amber). Do this before each flight |
 | ⏮ ⏯ ⏭ (MUSIC page, left) | Spotify previous / play-pause / next (Premium only) |
-| OPEN ♫ (middle rail button) | On the MUSIC page only, opens the Spotify app; hidden on FLIGHT DATA |
 
 ## Local development
 
