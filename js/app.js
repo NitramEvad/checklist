@@ -280,7 +280,8 @@
     document.querySelectorAll('#content [data-live]').forEach(el => {
       const v = Live.value(el.dataset.live);
       el.textContent = v ? v.text : '—';
-      el.classList.toggle('ok', !!(v && v.ok));
+      el.classList.remove('lv-red', 'lv-amber', 'lv-green');
+      if (v && v.cls) el.classList.add('lv-' + v.cls);
     });
   }
 
@@ -527,15 +528,20 @@
         upd();
       }).catch(() => {});
     }
+    // Returns { text, cls } where cls is 'red' | 'amber' | 'green' for colour.
     function value(key) {
       // QNH comes from the Weather module (not the battery), so handle it first.
       if (key === 'qnh') {
         const q = Weather.qnh();
-        return q == null ? null : { text: q + ' hPa', ok: false }; // informational
+        return q == null ? null : { text: q + ' hPa', cls: 'amber' }; // informational
       }
       if (!batt) return null;
-      if (key === 'battery')  return { text: Math.round(batt.level * 100) + '%', ok: batt.level >= 0.95 };
-      if (key === 'charging') return { text: batt.charging ? 'CHG' : 'ON BATT', ok: batt.charging };
+      if (key === 'battery') {
+        // red < 30%, amber < 90%, green ≥ 90%
+        const cls = batt.level < 0.30 ? 'red' : batt.level < 0.90 ? 'amber' : 'green';
+        return { text: Math.round(batt.level * 100) + '%', cls };
+      }
+      if (key === 'charging') return { text: batt.charging ? 'CHG' : 'ON BATT', cls: batt.charging ? 'green' : 'amber' };
       return null;
     }
     return { init, onChange: f => subs.push(f), value };

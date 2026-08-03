@@ -241,7 +241,7 @@ ul.cl li .resp {
 ul.cl li.active .resp { color: var(--amb); }
 ul.cl li.done   .resp { color: var(--grn); }
 
-/* live phone reading shown just left of the target value */
+/* live phone reading shown just left of the target value; colour-coded */
 ul.cl li .live {
   white-space: nowrap;
   font-weight: 800;
@@ -249,7 +249,9 @@ ul.cl li .live {
   color: var(--amb);
   padding: 0 0.15em 0 0.3em;
 }
-ul.cl li .live.ok { color: var(--grn); }
+ul.cl li .live.lv-red   { color: var(--red); }
+ul.cl li .live.lv-amber { color: var(--amb); }
+ul.cl li .live.lv-green { color: var(--grn); }
 
 ul.cl li.done { color: var(--grn); }
 ul.cl li.done .box { border-color: var(--grn); color: var(--grn); }
