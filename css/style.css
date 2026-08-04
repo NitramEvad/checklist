@@ -157,6 +157,14 @@ main {
   letter-spacing: 0.06em;
 }
 .railbtn.adv:active { background: #10303e; }
+.railbtn.swap {
+  border-color: var(--cyn);
+  color: var(--cyn);
+  font-size: clamp(13px, 3.2vh, 22px);
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+}
+.railbtn.swap:active { background: #10303e; }
 
 /* ---------- checklist page ---------- */
 
@@ -391,11 +399,25 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
 
 .tracklist {
   list-style: none;
+  flex: 1;          /* fill the panel beside the scroll buttons */
+  min-width: 0;
   min-height: 0;
   overflow-y: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
   -webkit-overflow-scrolling: touch;
+}
+
+/* now-playing header above the track list */
+.mnow {
+  min-width: 0;
+  font-weight: 700;
+  color: var(--cyn);
+  font-size: clamp(12px, 3vh, 18px);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .tracklist li {
   display: flex;

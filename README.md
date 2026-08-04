@@ -18,12 +18,13 @@ screen width, XCTrack's own widgets filling the rest).
   the ALT GPS tile to cycle its units (AUTO / metres / feet — AUTO reads feet
   in the UK/US and metres elsewhere, from your GPS position).
 - **MUSIC page** — previous / play-pause / next for the Spotify app playing in
-  the background, plus your **editable notes** (tap, type, saved on the phone)
-  beside the transport buttons. Spotify controls live *only* here, so the
-  checklist pages stay focused on checklist items. **Playback control needs
-  Spotify Premium** (a per-account tier — never shared via Family/Duo); with
-  Premium you can set `SHOW_TRACKLIST = true` in `js/app.js` to replace the
-  notes with a selectable track list of the current playlist.
+  the background, plus a right panel that **toggles between your editable NOTES
+  and the Spotify TRACKLIST** (middle rail button). The track list shows the
+  current playlist with a **now-playing header** and tap-to-jump; ▲/▼ scroll
+  either panel. Spotify controls live *only* here, so the checklist pages stay
+  focused on checklist items. **Playback control and the track list need
+  Spotify Premium** (each Premium / Duo / Family member has their own full
+  Premium account; a Free account can't control playback).
 - **Works offline, updates promptly** — it's a PWA with a network-first
   service worker: when you have a signal it loads the latest (so a checklist
   you edited and redeployed shows on the very next open); when you don't, it
@@ -65,12 +66,11 @@ phone via the Spotify Web API. Requirements: **Spotify Premium** and internet
 at the moment you press a button (patchy 4G is fine — each press is one tiny
 request; when offline the bar shows `OFFLINE — NO MUSIC CONTROL`).
 
-> **Premium is per-account and is *not* shared** by Spotify Family or Duo —
-> each person keeps their own tier. On a free account the Web API refuses
-> playback control (`SPOTIFY PREMIUM REQUIRED`). Because of that the MUSIC page
-> ships with `SHOW_TRACKLIST = false` (in `js/app.js`), showing your editable
-> notes beside the transport buttons instead of a track list. The whole rest
-> of the app works fine regardless; flip the flag to `true` if you go Premium.
+> **Premium is required for playback control and the track list.** Each member
+> of a Premium **Duo** or **Family** plan has their own full Premium account,
+> so those work too. A **Free** account can read what's playing but the Web API
+> refuses control (`SPOTIFY PREMIUM REQUIRED`) and the track list — on Free,
+> just use the NOTES side of the MUSIC page; the rest of the app is unaffected.
 
 1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
    (free), **Create app**.
@@ -170,6 +170,8 @@ Your choice is saved on the phone.
 | RESET | Clear the current page (top-right of each checklist) |
 | RESET ALL | Clear every checklist — on each checklist page's header, left of RESET (amber). Do this before each flight |
 | ⏮ ⏯ ⏭ (MUSIC page, left) | Spotify previous / play-pause / next (Premium only) |
+| ♫ LIST / ✎ NOTES (MUSIC middle rail button) | Toggle the right panel between the track list and your notes |
+| ⟳ (header, top-right) | Force the latest version — drops caches and reloads, without clearing XCTrack's data |
 
 ## Local development
 

@@ -22,9 +22,12 @@
   const CL_COUNT = CHECKLISTS.length;
   const MUSIC_PAGE = pages.findIndex(p => p.type === 'music');
 
-  // The Spotify track list needs a Premium account. With no Premium, show the
-  // editable notes on the MUSIC page instead. Flip to true if you go Premium.
-  const SHOW_TRACKLIST = false;
+  // The MUSIC page's right panel toggles between editable NOTES and the Spotify
+  // TRACKLIST (the latter needs Premium). The middle rail button switches them;
+  // the choice persists. Track list = 'tracklist', notes = 'notes'.
+  let musicPanel = localStorage.getItem('pfc.musicpanel') || 'notes';
+  const setMusicPanel = v => { musicPanel = v; localStorage.setItem('pfc.musicpanel', v); };
+  const onTracklist = () => pages[state.page].type === 'music' && musicPanel === 'tracklist';
 
   // Notes: on-device edits (localStorage) take priority over NOTES_DEFAULT.
   const NOTES_KEY = 'pfc.notes.v1';
@@ -131,9 +134,15 @@
   }
 
   // CHECK button: tick the active item and move to the next unchecked item; on
-  // a completed checklist go to the next page. Does nothing on other pages.
+  // a completed checklist go to the next page. On MUSIC it toggles the panel
+  // (notes ⇄ track list); does nothing on other pages.
   function checkAction() {
     const pi = state.page;
+    if (pages[pi].type === 'music') {
+      setMusicPanel(musicPanel === 'tracklist' ? 'notes' : 'tracklist');
+      render();
+      return;
+    }
     if (pages[pi].type !== 'checklist') return;
     const idx = activeIndex(pi);
     if (idx === -1) { go(1); return; }
@@ -200,13 +209,17 @@
     if (p.type === 'checklist')   renderChecklist(c, state.page);
     else if (p.type === 'data') { renderData(c); startGeo(); }
     else                          renderMusic(c);
-    // Middle rail button: CHECK/NEXT on checklists only; hidden elsewhere
-    // (MUSIC has its own transport buttons; FLIGHT DATA needs no middle button).
+    // Middle rail button: CHECK/NEXT on checklists; on MUSIC it toggles the
+    // right panel between NOTES and the track LIST; hidden on FLIGHT DATA.
     const btnCheck = $('#btnCheck');
     if (p.type === 'checklist') {
       btnCheck.style.display = '';
       btnCheck.className = 'railbtn check';
       btnCheck.textContent = pageComplete(state.page) ? 'NEXT ▶' : 'CHECK ✓';
+    } else if (p.type === 'music') {
+      btnCheck.style.display = '';
+      btnCheck.className = 'railbtn swap';
+      btnCheck.innerHTML = musicPanel === 'tracklist' ? '✎<br>NOTES' : '♫<br>LIST';
     } else {
       btnCheck.style.display = 'none';
     }
@@ -350,8 +363,17 @@
             <button class="pbtn" id="mNext">⏭</button>
             <button class="minibtn warn" id="mLogout">✕</button>
           </div>
-          ${SHOW_TRACKLIST
-            ? `<ul class="tracklist" id="mList"><li class="tldim">Loading playlist…</li></ul>`
+          ${musicPanel === 'tracklist'
+            ? `<div class="notes">
+                 <div class="clhead"><span class="mnow" id="mNow">…</span></div>
+                 <div class="notesbody">
+                   <ul class="tracklist" id="mList"><li class="tldim">Loading playlist…</li></ul>
+                   <div class="nscroll">
+                     <button class="nbtn" id="mListUp" aria-label="scroll up">▲</button>
+                     <button class="nbtn" id="mListDown" aria-label="scroll down">▼</button>
+                   </div>
+                 </div>
+               </div>`
             : notesEditorHtml('mNotes', 'mNotesReset', 'NOTES — SAVED ON THIS PHONE')}
         </div>`;
       $('#mPrev').addEventListener('click', () => spCmd('prev', true));
@@ -361,8 +383,13 @@
         Spotify.logout();
         render();
       });
-      if (SHOW_TRACKLIST) { refreshNowPlaying(); refreshPlaylist(); }
-      else bindNotesEditor('mNotes', 'mNotesReset');
+      if (musicPanel === 'tracklist') {
+        bindScroll('mListUp', 'mListDown', '#mList');
+        refreshNowPlaying();
+        refreshPlaylist();
+      } else {
+        bindNotesEditor('mNotes', 'mNotesReset');
+      }
     } else {
       c.innerHTML = `
         <div class="music">
@@ -403,6 +430,16 @@
       </div>
     </div>`;
 
+  // Wire ▲/▼ buttons to scroll a target element (touch-drag is unreliable in
+  // XCTrack's WebView), used by both the notes textarea and the track list.
+  function bindScroll(upId, downId, sel) {
+    const el = $(sel);
+    if (!el) return;
+    const by = dir => () => { el.scrollTop += dir * el.clientHeight * 0.6; };
+    $('#' + upId).addEventListener('click', by(-1));
+    $('#' + downId).addEventListener('click', by(1));
+  }
+
   function bindNotesEditor(taId, resetId) {
     const ta = $('#' + taId);
     ta.addEventListener('input', () => localStorage.setItem(NOTES_KEY, ta.value));
@@ -411,13 +448,11 @@
       localStorage.removeItem(NOTES_KEY);
       ta.value = getNotes();
     });
-    const scrollBy = dir => () => { ta.scrollTop += dir * ta.clientHeight * 0.6; };
-    $('#' + taId + 'Up').addEventListener('click', scrollBy(-1));
-    $('#' + taId + 'Down').addEventListener('click', scrollBy(1));
+    bindScroll(taId + 'Up', taId + 'Down', '#' + taId);
   }
 
-  // Read-only notes, shown in the track-list area only when SHOW_TRACKLIST is
-  // on but the list can't load (e.g. no active device). Escaped; newlines via CSS.
+  // Read-only notes, shown in the track-list area when the list can't load
+  // (offline / no active device). Escaped; newlines preserved via CSS.
   const notesReadonlyHtml = () =>
     `<li class="tlnotes"><div class="tlnotes-h">NOTES</div>` +
     `<div class="tlnotes-b">${esc(getNotes()) || '<span class="tldim">No notes yet</span>'}</div></li>`;
@@ -436,7 +471,7 @@
     if (!Spotify.connected()) { goTo(MUSIC_PAGE); return; } // jump to MUSIC setup
     try {
       await Spotify[cmd]();
-      if (SHOW_TRACKLIST) {
+      if (onTracklist()) {
         setTimeout(refreshNowPlaying, 700);
         if (refreshList) setTimeout(refreshPlaylist, 800);
       }
@@ -445,17 +480,18 @@
     }
   }
 
-
-  // Only relevant when the track list is shown (Premium) — keeps its "now
-  // playing" highlight in sync. No-op otherwise.
+  // Keeps the track list's "now playing" header + highlight in sync. Only runs
+  // while the TRACKLIST panel is visible; no-op otherwise.
   let curUri = null;
   async function refreshNowPlaying() {
-    if (!SHOW_TRACKLIST || !Spotify.connected() || !navigator.onLine) return;
+    if (!onTracklist() || !Spotify.connected() || !navigator.onLine) return;
     try {
       const s = await Spotify.nowPlaying();
+      setTxt('#mNow', s ? ((s.playing ? '▶ ' : '⏸ ') + s.track)
+                        : 'NOTHING PLAYING — PRESS PLAY IN SPOTIFY');
       const newUri = s ? s.uri : null;
       if (newUri !== curUri) { curUri = newUri; highlightCurrent(); }
-    } catch (e) { /* ignore */ }
+    } catch (e) { setTxt('#mNow', spErrMsg(e)); }
   }
 
   function highlightCurrent() {
@@ -744,7 +780,7 @@
     render();
     primeWeather();
     setInterval(tick, 1000);
-    if (SHOW_TRACKLIST) setInterval(refreshNowPlaying, 12000);
+    setInterval(refreshNowPlaying, 12000); // self-gates to the visible track list
     // Offline capability: cache the whole app on first visit.
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
