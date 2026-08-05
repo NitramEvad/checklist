@@ -22,7 +22,9 @@ screen width, XCTrack's own widgets filling the rest).
   and the Spotify TRACKLIST** (middle rail button). The track list shows the
   current playlist with a **now-playing header** and tap-to-jump; ▲/▼ scroll
   either panel. A track name too long for the header scrolls slowly back and
-  forth like a ticker rather than shoving the KEEP AWAKE button aside. Spotify controls live *only* here, so the checklist pages stay
+  forth like a ticker rather than shoving the KEEP AWAKE button aside. The KEEP
+  AWAKE button shows the mode it is **currently in** — green lamp lit + "ON"
+  while the keep-alive is running, dark lamp + "OFF" when it isn't. Spotify controls live *only* here, so the checklist pages stay
   focused on checklist items. **Playback control and the track list need
   Spotify Premium** (each Premium / Duo / Family member has their own full
   Premium account; a Free account can't control playback).

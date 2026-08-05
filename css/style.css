@@ -200,6 +200,22 @@ main {
 .minibtn.warn { border-color: #5a3200; color: var(--amb); }
 .minibtn.on { border-color: var(--grn); color: var(--grn); }
 
+/* Status lamp for mode toggles whose label states the CURRENT mode (not the
+   action). Lit + filled = the mode is running; dark ring = it isn't — so the
+   button reads as an annunciator rather than as an instruction. */
+.minibtn.lamped { display: inline-flex; align-items: center; gap: 0.55em; }
+.lamp {
+  flex: 0 0 auto;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  background: transparent;
+}
+.minibtn.on .lamp { background: var(--grn); box-shadow: 0 0 6px var(--grn); }
+/* reserve room for the longer word so the button doesn't resize when toggled */
+.kstate { display: inline-block; min-width: 2.6em; text-align: center; }
+
 ul.cl {
   list-style: none;
   flex: 1;

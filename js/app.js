@@ -373,7 +373,7 @@
             ? `<div class="notes">
                  <div class="clhead">
                    <div class="mnow" id="mNow"><span class="mnowclip"><span class="mnowtxt">…</span></span></div>
-                   <button class="minibtn ${keepAwake ? 'on' : ''}" id="mKeep">KEEP AWAKE ${keepAwake ? 'ON' : 'OFF'}</button>
+                   <button class="minibtn lamped ${keepAwake ? 'on' : ''}" id="mKeep"><span class="lamp"></span>KEEP AWAKE <span class="kstate">${keepAwake ? 'ON' : 'OFF'}</span></button>
                  </div>
                  <div class="notesbody">
                    <ul class="tracklist" id="mList"><li class="tldim">Loading playlist…</li></ul>
@@ -398,8 +398,10 @@
         $('#mKeep').addEventListener('click', () => {
           setKeepAwake(!keepAwake);
           render();
-          if (keepAwake) { toast('KEEP-ALIVE ON — TESTING…'); doKeepAlive(); }
-          else toast('KEEP-ALIVE OFF');
+          // Same words as the button, and "NOW" makes clear the toast is
+          // reporting the state you just switched into, not an instruction.
+          if (keepAwake) { toast('KEEP AWAKE NOW ON — TESTING…'); doKeepAlive(); }
+          else toast('KEEP AWAKE NOW OFF');
         });
         refreshNowPlaying();
         refreshPlaylist();
@@ -493,7 +495,7 @@
       const r = await Spotify.keepAlive();
       if (r === 'no-device' && !keepAliveShownNoDevice && onTracklist()) {
         keepAliveShownNoDevice = true;
-        toast('NO DEVICE YET — PRESS PLAY IN SPOTIFY ONCE');
+        toast('KEEP AWAKE: NO DEVICE YET — PRESS PLAY IN SPOTIFY ONCE');
       } else if (r === 'ok') {
         keepAliveShownNoDevice = false;
       }
@@ -531,7 +533,7 @@
   // changes, so the 12 s poll doesn't restart the ticker mid-scroll.
   let nowShown = null;
   function setNowPlaying(icon, text) {
-    const key = icon + ' ' + text;
+    const key = icon + ' ' + text;
     if (key === nowShown) return;
     const el = $('#mNow');
     if (!el) return;
