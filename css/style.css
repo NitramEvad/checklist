@@ -176,6 +176,8 @@ main {
   padding-bottom: 0.25em;
 }
 .clbtns { display: flex; gap: 10px; flex: 0 0 auto; }
+/* header buttons keep their size and stay put whatever the text beside them */
+.clhead > .minibtn { flex: 0 0 auto; white-space: nowrap; }
 .prog {
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -409,16 +411,42 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   -webkit-overflow-scrolling: touch;
 }
 
-/* now-playing header above the track list */
+/* Now-playing header above the track list. Track names are often longer than
+   the strip, so the text shuttles slowly like a ticker (js sizes the travel);
+   the ▶/⏸ icon is held still on the left so the state is always readable. */
 .mnow {
+  flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35em;
   font-weight: 700;
   color: var(--cyn);
   font-size: clamp(12px, 3vh, 18px);
   letter-spacing: 0.02em;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+.mnowicon { flex: 0 0 auto; }
+.mnowclip {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis; /* fallback if the ticker can't run */
+}
+/* while scrolling, fade both cut edges so text doesn't end mid-letter */
+.mnowclip.fade {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12px,
+                                      #000 calc(100% - 12px), transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 12px,
+                                      #000 calc(100% - 12px), transparent);
+}
+.mnowtxt { display: inline-block; white-space: nowrap; }
+.mnowtxt.roll { animation: mnowroll var(--mdur, 10s) linear infinite alternate; }
+/* Dwell at each end so the start and end of the name are both readable. */
+@keyframes mnowroll {
+  0%, 18%   { transform: translateX(0); }
+  82%, 100% { transform: translateX(var(--mshift, 0)); }
 }
 .tracklist li {
   display: flex;
@@ -473,6 +501,7 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
 
 .notes {
   flex: 1;
+  min-width: 0;   /* let long track names clip instead of widening the panel */
   min-height: 0;
   display: flex;
   flex-direction: column;

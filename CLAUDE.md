@@ -70,7 +70,9 @@ Each item in `CHECKLISTS[n].items` is one of:
 Left column = Spotify transport (⏮ ⏯ ⏭ + ✕ disconnect). Right panel **toggles**
 between **NOTES** (editable, `localStorage` `pfc.notes.v1`, seeded from
 `NOTES_DEFAULT`) and **TRACKLIST** (Premium: now-playing header + selectable
-current playlist). The **middle rail button** toggles the panel (`musicPanel`,
+current playlist). The now-playing header holds the ▶/⏸ icon still and shuttles
+the track name (`fitTicker()`, CSS `.mnowtxt.roll`) when it overflows; it only
+redraws when the text changes, so the 12 s poll doesn't restart the scroll. The **middle rail button** toggles the panel (`musicPanel`,
 saved as `pfc.musicpanel`; shows "♫ LIST" / "✎ NOTES"). Both panels have ▲/▼
 scroll buttons (touch-drag is unreliable in the WebView). **KEEP AWAKE** toggle
 (tracklist header) is the experimental Spotify keep-alive (see below).

@@ -372,8 +372,8 @@
           ${musicPanel === 'tracklist'
             ? `<div class="notes">
                  <div class="clhead">
-                   <span class="mnow" id="mNow">…</span>
-                   <button class="minibtn ${keepAwake ? 'on' : ''}" id="mKeep">KEEP&nbsp;AWAKE ${keepAwake ? 'ON' : 'OFF'}</button>
+                   <div class="mnow" id="mNow"><span class="mnowclip"><span class="mnowtxt">…</span></span></div>
+                   <button class="minibtn ${keepAwake ? 'on' : ''}" id="mKeep">KEEP AWAKE ${keepAwake ? 'ON' : 'OFF'}</button>
                  </div>
                  <div class="notesbody">
                    <ul class="tracklist" id="mList"><li class="tldim">Loading playlist…</li></ul>
@@ -393,6 +393,7 @@
         render();
       });
       if (musicPanel === 'tracklist') {
+        nowShown = null; // header was just rebuilt — force the next refresh to draw
         bindScroll('mListUp', 'mListDown', '#mList');
         $('#mKeep').addEventListener('click', () => {
           setKeepAwake(!keepAwake);
@@ -519,11 +520,47 @@
     if (!onTracklist() || !Spotify.connected() || !navigator.onLine) return;
     try {
       const s = await Spotify.nowPlaying();
-      setTxt('#mNow', s ? ((s.playing ? '▶ ' : '⏸ ') + s.track)
-                        : 'NOTHING PLAYING — PRESS PLAY IN SPOTIFY');
+      if (s) setNowPlaying(s.playing ? '▶' : '⏸', s.track);
+      else   setNowPlaying('', 'NOTHING PLAYING — PRESS PLAY IN SPOTIFY');
       const newUri = s ? s.uri : null;
       if (newUri !== curUri) { curUri = newUri; highlightCurrent(); }
-    } catch (e) { setTxt('#mNow', spErrMsg(e)); }
+    } catch (e) { setNowPlaying('', spErrMsg(e)); }
+  }
+
+  // Writes the now-playing strip. Only touches the DOM when the text actually
+  // changes, so the 12 s poll doesn't restart the ticker mid-scroll.
+  let nowShown = null;
+  function setNowPlaying(icon, text) {
+    const key = icon + ' ' + text;
+    if (key === nowShown) return;
+    const el = $('#mNow');
+    if (!el) return;
+    nowShown = key;
+    el.innerHTML = (icon ? `<span class="mnowicon">${esc(icon)}</span>` : '') +
+      `<span class="mnowclip"><span class="mnowtxt">${esc(text)}</span></span>`;
+    fitTicker();
+  }
+
+  // Track names are routinely wider than the strip beside the KEEP AWAKE
+  // button, so scroll them back and forth instead of truncating. Travel and
+  // duration are measured per name to keep the reading speed constant; a name
+  // that already fits is left still.
+  const TICKER_PXPS = 50;   // px/second while moving
+  const TICKER_MOVE = 0.64; // share of the cycle spent moving (rest = dwell)
+  function fitTicker() {
+    const clip = $('#mNow .mnowclip');
+    const txt  = $('#mNow .mnowtxt');
+    if (!clip || !txt) return;
+    txt.classList.remove('roll');
+    clip.classList.remove('fade');
+    const over = txt.getBoundingClientRect().width - clip.clientWidth;
+    if (over <= 1) return;               // fits — nothing to scroll
+    const travel = Math.ceil(over) + 14; // clear the fade at the far edge
+    txt.style.setProperty('--mshift', -travel + 'px');
+    txt.style.setProperty('--mdur',
+      Math.max(4, travel / TICKER_PXPS / TICKER_MOVE).toFixed(1) + 's');
+    txt.classList.add('roll');
+    clip.classList.add('fade');
   }
 
   function highlightCurrent() {
@@ -778,6 +815,7 @@
     $('#btnRefresh').addEventListener('click', forceRefresh);
     window.addEventListener('online', () => { updateNet(); refreshNowPlaying(); });
     window.addEventListener('offline', updateNet);
+    window.addEventListener('resize', fitTicker); // re-measure the ticker travel
     document.addEventListener('keydown', e => {
       // Don't hijack keys while editing a text field (notes / Spotify ID).
       const editing = /^(INPUT|TEXTAREA)$/.test(e.target.tagName);
