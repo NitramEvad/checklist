@@ -215,10 +215,26 @@ const Spotify = (() => {
     };
   }
 
+  // Keep-alive: send a harmless, inaudible command to the active device so its
+  // Spotify Connect idle timer keeps resetting (which otherwise deregisters an
+  // idle/paused phone after ~10 min). Re-sets the volume to its current value.
+  // Returns 'ok' | 'no-device' | 'no-volume'. Only works while a device is
+  // still registered — it can't revive one that has already dropped off.
+  async function keepAlive() {
+    const res = await api('/me/player');
+    if (res.status === 204) return 'no-device';
+    const j = await res.json();
+    const dev = j && j.device;
+    if (!dev) return 'no-device';
+    if (typeof dev.volume_percent !== 'number') return 'no-volume';
+    await api('/me/player/volume?volume_percent=' + dev.volume_percent, 'PUT');
+    return 'ok';
+  }
+
   return {
     connected: () => !!cfg.refresh,
     clientId: () => cfg.clientId || '',
     login, logout, handleRedirect,
-    toggle, next, prev, nowPlaying, playlist, playAt,
+    toggle, next, prev, nowPlaying, playlist, playAt, keepAlive,
   };
 })();

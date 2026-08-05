@@ -29,6 +29,12 @@
   const setMusicPanel = v => { musicPanel = v; localStorage.setItem('pfc.musicpanel', v); };
   const onTracklist = () => pages[state.page].type === 'music' && musicPanel === 'tracklist';
 
+  // Keep-alive: experimental attempt to stop the Spotify app deregistering from
+  // Connect after ~10 min idle. When on, a harmless inaudible command is sent
+  // to the active device every few minutes to reset its idle timer.
+  let keepAwake = localStorage.getItem('pfc.keepawake') === '1';
+  const setKeepAwake = v => { keepAwake = v; localStorage.setItem('pfc.keepawake', v ? '1' : '0'); };
+
   // Notes: on-device edits (localStorage) take priority over NOTES_DEFAULT.
   const NOTES_KEY = 'pfc.notes.v1';
   const DEFAULT_NOTES = (typeof NOTES_DEFAULT === 'string') ? NOTES_DEFAULT : '';
@@ -365,7 +371,10 @@
           </div>
           ${musicPanel === 'tracklist'
             ? `<div class="notes">
-                 <div class="clhead"><span class="mnow" id="mNow">…</span></div>
+                 <div class="clhead">
+                   <span class="mnow" id="mNow">…</span>
+                   <button class="minibtn ${keepAwake ? 'on' : ''}" id="mKeep">KEEP&nbsp;AWAKE ${keepAwake ? 'ON' : 'OFF'}</button>
+                 </div>
                  <div class="notesbody">
                    <ul class="tracklist" id="mList"><li class="tldim">Loading playlist…</li></ul>
                    <div class="nscroll">
@@ -385,6 +394,12 @@
       });
       if (musicPanel === 'tracklist') {
         bindScroll('mListUp', 'mListDown', '#mList');
+        $('#mKeep').addEventListener('click', () => {
+          setKeepAwake(!keepAwake);
+          render();
+          if (keepAwake) { toast('KEEP-ALIVE ON — TESTING…'); doKeepAlive(); }
+          else toast('KEEP-ALIVE OFF');
+        });
         refreshNowPlaying();
         refreshPlaylist();
       } else {
@@ -465,6 +480,23 @@
     if (e.message === 'PREMIUM_REQUIRED') return 'SPOTIFY PREMIUM REQUIRED';
     if (e.message === 'NOT_CONNECTED')    return 'SPOTIFY: NOT CONNECTED';
     return 'SPOTIFY ERROR (' + e.message + ')';
+  }
+
+  // Keep-alive tick: nudge the active device so it doesn't drop off Connect.
+  // Runs on a timer while enabled; also fired once when the toggle is switched
+  // on (which surfaces whether a device is actually reachable right now).
+  let keepAliveShownNoDevice = false;
+  async function doKeepAlive() {
+    if (!keepAwake || !Spotify.connected() || !navigator.onLine) return;
+    try {
+      const r = await Spotify.keepAlive();
+      if (r === 'no-device' && !keepAliveShownNoDevice && onTracklist()) {
+        keepAliveShownNoDevice = true;
+        toast('NO DEVICE YET — PRESS PLAY IN SPOTIFY ONCE');
+      } else if (r === 'ok') {
+        keepAliveShownNoDevice = false;
+      }
+    } catch (e) { /* transient; try again next tick */ }
   }
 
   async function spCmd(cmd, refreshList) {
@@ -781,6 +813,7 @@
     primeWeather();
     setInterval(tick, 1000);
     setInterval(refreshNowPlaying, 12000); // self-gates to the visible track list
+    setInterval(doKeepAlive, 240000);      // every 4 min; self-gates on keepAwake
     // Offline capability: cache the whole app on first visit.
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});

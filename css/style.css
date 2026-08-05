@@ -196,6 +196,7 @@ main {
   color: var(--dim);
 }
 .minibtn.warn { border-color: #5a3200; color: var(--amb); }
+.minibtn.on { border-color: var(--grn); color: var(--grn); }
 
 ul.cl {
   list-style: none;
