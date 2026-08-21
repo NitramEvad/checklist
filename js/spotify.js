@@ -71,6 +71,9 @@ const Spotify = (() => {
     const j = await res.json();
     cfg.access = j.access_token;
     if (j.refresh_token) cfg.refresh = j.refresh_token;
+    // What the user actually granted (space-separated). Lets the UI tell a
+    // "reconnect to grant the new permission" state from a hard API block.
+    if (j.scope) cfg.scope = j.scope;
     cfg.exp = Date.now() + (j.expires_in - 60) * 1000;
     save();
   }
@@ -234,11 +237,13 @@ const Spotify = (() => {
     // though its track list can't be read.
     const q = await (await api('/me/player/queue')).json();
     const list = [q.currently_playing, ...(q.queue || [])].filter(Boolean);
-    // With repeat-one or a one-track context, Spotify pads the queue with the
-    // same track over and over — collapse those runs to a single row.
-    const tracks = [];
+    // Dedupe by URI: repeat-one / one-track contexts pad the queue with the
+    // same track over and over, and repeat-context wraps the queue around so
+    // the playing track shows up a second time further down.
+    const tracks = [], seen = new Set();
     for (const t of list) {
-      if (!tracks.length || tracks[tracks.length - 1].uri !== t.uri) {
+      if (!seen.has(t.uri)) {
+        seen.add(t.uri);
         tracks.push({ uri: t.uri, name: t.name, artist: artistsOf(t) });
       }
     }
@@ -293,6 +298,9 @@ const Spotify = (() => {
   return {
     connected: () => !!cfg.refresh,
     clientId: () => cfg.clientId || '',
+    // Unknown until a token response has been seen (cfg.scope stays unset for
+    // tokens stored before this existed — it self-fills on the next refresh).
+    hasScope: s => !!cfg.scope && cfg.scope.split(' ').includes(s),
     login, logout, handleRedirect,
     toggle, next, prev, nowPlaying, playlist, playAt, playContext, contextName, keepAlive,
   };

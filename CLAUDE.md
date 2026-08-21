@@ -136,9 +136,14 @@ in code; they're platform constraints):**
    radio, editorial — 404/403 on `/playlists/{id}` since the Nov 2024 API
    restrictions) always; the pilot's own *private* lists too until they
    reconnect with the playlist-read scopes. `Spotify.playlist()` therefore
-   degrades to the up-next queue view (marked `queue: true`, honest "UP NEXT —
-   …" label naming the reason) instead of erroring while music is audibly
-   playing. The fallback still carries `contextUri`, so tap-to-jump plays
+   degrades to the up-next queue view (marked `queue: true`) instead of
+   erroring while music is audibly playing. Its header row is state-aware
+   via `Spotify.hasScope()` (granted scopes are stored off token responses):
+   missing playlist-read scope → an actionable "tap ✕ then CONNECT" hint;
+   scope granted but still blocked → no row at all (play order, pilot asked
+   for no explanation banner); free play / repeat-1 keep their labels. The
+   queue is deduped by URI (repeat-context wraps it around, repeat-1 pads
+   it). The fallback still carries `contextUri`, so tap-to-jump plays
    within the real context; a context-free tap sends the whole visible queue
    (never one bare URI — a one-track context stops after the song and makes
    `/me/player/queue` report the current track over and over, which the

@@ -659,15 +659,20 @@
         return;
       }
       curUri = pl.current;
-      // Queue fallback (no readable playlist context): label it so a pile of
-      // autoplay recommendations can't be mistaken for one of your playlists —
-      // and say which of the three reasons put us here.
-      const head = pl.queue
-        ? `<li class="tldim">${
-            pl.repeat === 'track' ? 'UP NEXT — repeat-1 is on, one track loops'
-            : pl.contextUri       ? "UP NEXT — Spotify won't let this list be read"
-                                  : 'UP NEXT — not playing from a playlist'}</li>`
-        : '';
+      // Queue fallback header. An unreadable playlist usually just means the
+      // playlist-read permission hasn't been granted yet (it only arrives on a
+      // fresh CONNECT) — say so, actionably. Once granted, a still-unreadable
+      // list is a Spotify-side block (editorial lists): show plain play order
+      // with no explanation row. Free play keeps its label so autoplay
+      // recommendations can't be mistaken for a playlist.
+      const needScope = pl.contextUri && !Spotify.hasScope('playlist-read-private');
+      const head = !pl.queue ? '' :
+        pl.repeat === 'track'
+          ? '<li class="tldim">UP NEXT — repeat-1 is on, one track loops</li>'
+        : needScope
+          ? '<li class="tldim">To show the playlist: tap ✕ then CONNECT SPOTIFY once (new permission)</li>'
+        : pl.contextUri ? ''
+        : '<li class="tldim">UP NEXT — not playing from a playlist</li>';
       list.innerHTML = head + pl.tracks.map(t => `
         <li data-uri="${esc(t.uri)}" class="${t.uri === pl.current ? 'cur' : ''}">
           <span class="tname">${esc(t.name)}</span>
