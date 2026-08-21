@@ -22,7 +22,7 @@ screen width, XCTrack's own widgets filling the rest).
   and the Spotify TRACKLIST** (middle rail button). The track list shows the
   current playlist with a **now-playing header** and tap-to-jump; ▲/▼ scroll
   either panel. A track name too long for the header scrolls slowly back and
-  forth like a ticker rather than shoving the KEEP AWAKE button aside.
+  forth like a ticker rather than being cut off.
   The green **▶ quick-start button** under the transport controls starts your
   own playlist with one tap (set it up by pasting the playlist's share link —
   Spotify → Share → Copy link — either in `js/checklists.js` as

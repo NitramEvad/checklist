@@ -391,13 +391,13 @@
             <button class="pbtn grn" id="mToggle">⏯</button>
             <button class="pbtn" id="mNext">⏭</button>
             <button class="minibtn grn" id="mQuick">${quick ? '▶ ' + esc(quick.name) : '＋ PLAYLIST'}</button>
+            <button class="minibtn stack ${keepAwake ? 'on' : ''}" id="mKeep">KEEP AWAKE <span class="krow"><span class="lamp"></span><span class="kstate">${keepAwake ? 'ON' : 'OFF'}</span></span></button>
             <button class="minibtn warn" id="mLogout">✕</button>
           </div>
           ${musicPanel === 'tracklist'
             ? `<div class="notes">
                  <div class="clhead">
                    <div class="mnow" id="mNow"><span class="mnowclip"><span class="mnowtxt">…</span></span></div>
-                   <button class="minibtn lamped ${keepAwake ? 'on' : ''}" id="mKeep"><span class="lamp"></span>KEEP AWAKE <span class="kstate">${keepAwake ? 'ON' : 'OFF'}</span></button>
                  </div>
                  <div class="notesbody">
                    <ul class="tracklist" id="mList"><li class="tldim">Loading playlist…</li></ul>
@@ -413,6 +413,14 @@
       $('#mNext').addEventListener('click', () => spCmd('next', true));
       $('#mToggle').addEventListener('click', () => spCmd('toggle'));
       $('#mQuick').addEventListener('click', quickPlay);
+      $('#mKeep').addEventListener('click', () => {
+        setKeepAwake(!keepAwake);
+        render();
+        // Same words as the button, and "NOW" makes clear the toast is
+        // reporting the state you just switched into, not an instruction.
+        if (keepAwake) { toast('KEEP AWAKE NOW ON — TESTING…'); doKeepAlive(); }
+        else toast('KEEP AWAKE NOW OFF');
+      });
       $('#mLogout').addEventListener('click', () => {
         Spotify.logout();
         render();
@@ -420,14 +428,6 @@
       if (musicPanel === 'tracklist') {
         nowShown = null; // header was just rebuilt — force the next refresh to draw
         bindScroll('mListUp', 'mListDown', '#mList');
-        $('#mKeep').addEventListener('click', () => {
-          setKeepAwake(!keepAwake);
-          render();
-          // Same words as the button, and "NOW" makes clear the toast is
-          // reporting the state you just switched into, not an instruction.
-          if (keepAwake) { toast('KEEP AWAKE NOW ON — TESTING…'); doKeepAlive(); }
-          else toast('KEEP AWAKE NOW OFF');
-        });
         refreshNowPlaying();
         refreshPlaylist();
       } else {
@@ -616,8 +616,8 @@
     fitTicker();
   }
 
-  // Track names are routinely wider than the strip beside the KEEP AWAKE
-  // button, so scroll them back and forth instead of truncating. Travel and
+  // Track names are routinely wider than the now-playing strip, so scroll
+  // them back and forth instead of truncating. Travel and
   // duration are measured per name to keep the reading speed constant; a name
   // that already fits is left still.
   const TICKER_PXPS = 50;   // px/second while moving

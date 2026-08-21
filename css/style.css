@@ -423,6 +423,19 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   white-space: nowrap;       /* …instead of wrapping the narrow column */
 }
 .minibtn.grn { border-color: var(--grn); color: var(--grn); }
+/* two-line mode toggle for the narrow column: label, then lamp + state.
+   Slim side padding so "KEEP AWAKE" holds one line in the ~100px column. */
+.pleft .minibtn.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2em;
+  white-space: nowrap;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+  line-height: 1.1;
+}
+.minibtn.stack .krow { display: inline-flex; align-items: center; gap: 0.4em; }
 
 .tracklist {
   list-style: none;

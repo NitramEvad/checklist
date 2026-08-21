@@ -76,7 +76,9 @@ the track name (`fitTicker()`, CSS `.mnowtxt.roll`) when it overflows; it only
 redraws when the text changes, so the 12 s poll doesn't restart the scroll. The **middle rail button** toggles the panel (`musicPanel`,
 saved as `pfc.musicpanel`; shows "♫ LIST" / "✎ NOTES"). Both panels have ▲/▼
 scroll buttons (touch-drag is unreliable in the WebView). **KEEP AWAKE** toggle
-(tracklist header) is the experimental Spotify keep-alive (see below). Its label
+(transport column between ▶ quick-start and ✕, so it's visible from both
+panels; two-line `.minibtn.stack` layout because the column is narrow) is the
+experimental Spotify keep-alive (see below). Its label
 states the **current** mode, not the action — a lit green lamp (`.lamp` inside
 `.minibtn.lamped`) plus "ON", or a dark ring plus "OFF"; the toast uses the same
 words ("KEEP AWAKE NOW ON/OFF") so the two can't be read as contradicting each
