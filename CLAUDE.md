@@ -68,16 +68,17 @@ Each item in `CHECKLISTS[n].items` is one of:
   keyless) by GPS, cached offline (`Weather`). Tap QNH tile to hand-set it.
 
 ### MUSIC page
-Left column = Spotify transport (⏮ ⏯ ⏭ + ✕ disconnect). Right panel **toggles**
+Left column = Spotify transport (⏮ ⏯ ⏭, ▶ quick-start, ⚙ SETUP). Right panel **toggles**
 between **NOTES** (editable, `localStorage` `pfc.notes.v1`, seeded from
 `NOTES_DEFAULT`) and **TRACKLIST** (Premium: now-playing header + selectable
 current playlist). The now-playing header holds the ▶/⏸ icon still and shuttles
 the track name (`fitTicker()`, CSS `.mnowtxt.roll`) when it overflows; it only
 redraws when the text changes, so the 12 s poll doesn't restart the scroll. The **middle rail button** toggles the panel (`musicPanel`,
 saved as `pfc.musicpanel`; shows "♫ LIST" / "✎ NOTES"). Both panels have ▲/▼
-scroll buttons (touch-drag is unreliable in the WebView). **KEEP AWAKE** toggle
-(transport column between ▶ quick-start and ✕, so it's visible from both
-panels; two-line `.minibtn.stack` layout because the column is narrow) is the
+scroll buttons (touch-drag is unreliable in the WebView). The **⚙ SETUP**
+button (transport column, below ▶ quick-start) opens an overlay (`setupOpen`,
+not persisted, closed on page change) holding the rarely-used controls:
+the **KEEP AWAKE** toggle and **✕ DISCONNECT SPOTIFY**. KEEP AWAKE is the
 experimental Spotify keep-alive (see below). Its label
 states the **current** mode, not the action — a lit green lamp (`.lamp` inside
 `.minibtn.lamped`) plus "ON", or a dark ring plus "OFF"; the toast uses the same
@@ -111,7 +112,7 @@ the phone (it does not stream audio). PKCE, no server. Scopes:
 `user-read-playback-state user-modify-playback-state playlist-read-private
 playlist-read-collaborative` (the playlist-read pair lets the track list show
 the pilot's private playlists; scopes are granted at connect time, so adding
-one needs a one-time ✕ → CONNECT on the phone). Setup: pilot registers a
+one needs a one-time SETUP → DISCONNECT → CONNECT on the phone). Setup: pilot registers a
 free Spotify dev app, redirect URI = the site URL, pastes the Client ID on the
 MUSIC page. Tokens auto-refresh.
 
@@ -141,7 +142,8 @@ in code; they're platform constraints):**
    degrades to the up-next queue view (marked `queue: true`) instead of
    erroring while music is audibly playing. Its header row is state-aware
    via `Spotify.hasScope()` (granted scopes are stored off token responses):
-   missing playlist-read scope → an actionable "tap ✕ then CONNECT" hint;
+   missing playlist-read scope → an actionable "SETUP → DISCONNECT, then
+   CONNECT" hint;
    scope granted but still blocked → no row at all (play order, pilot asked
    for no explanation banner); free play / repeat-1 keep their labels. The
    queue is deduped by URI (repeat-context wraps it around, repeat-1 pads

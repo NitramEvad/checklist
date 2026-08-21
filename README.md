@@ -29,14 +29,17 @@ screen width, XCTrack's own widgets filling the rest).
   `QUICKPLAY_DEFAULT` or on the phone; tap the button while that playlist is
   already playing to change or clear the phone's link). Note the track list can
   only show playlists Spotify lets the API read: your own lists work (private
-  ones after a one-time reconnect — tap ✕ then CONNECT SPOTIFY — to grant the
+  ones after a one-time reconnect — ⚙ SETUP → DISCONNECT SPOTIFY, then
+  CONNECT — to grant the
   playlist-read permission — the list itself tells you when that's needed),
   but Spotify-made ones (Daily Mix, radio, editorial) never do — for those the
   list shows plain play order starting at the current track, and for free play
   an **UP NEXT** queue view. Tapping a track always keeps the rest of the
-  queue/playlist coming. The KEEP
-  AWAKE button shows the mode it is **currently in** — green lamp lit + "ON"
-  while the keep-alive is running, dark lamp + "OFF" when it isn't. Spotify controls live *only* here, so the checklist pages stay
+  queue/playlist coming. The **⚙ SETUP** button opens a small dialog with the
+  rarely-needed controls: the KEEP AWAKE toggle (shows the mode it is
+  **currently in** — green lamp lit + "ON" while the keep-alive is running,
+  dark lamp + "OFF" when it isn't) and DISCONNECT
+  SPOTIFY. Spotify controls live *only* here, so the checklist pages stay
   focused on checklist items. **Playback control and the track list need
   Spotify Premium** (each Premium / Duo / Family member has their own full
   Premium account; a Free account can't control playback).

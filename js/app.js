@@ -35,6 +35,10 @@
   let keepAwake = localStorage.getItem('pfc.keepawake') === '1';
   const setKeepAwake = v => { keepAwake = v; localStorage.setItem('pfc.keepawake', v ? '1' : '0'); };
 
+  // MUSIC ⚙ SETUP overlay (keep-awake toggle + disconnect). Not persisted;
+  // closes when navigating off the page so it can't lurk under a checklist.
+  let setupOpen = false;
+
   // Quick-start playlist for the MUSIC page's ▶ button: one tap starts the
   // pilot's own playlist playing on the phone. Seeded from QUICKPLAY_DEFAULT
   // in js/checklists.js; a link pasted on the phone (stored locally) wins.
@@ -116,10 +120,11 @@
 
   function go(delta) {
     state.page = (state.page + delta + pages.length) % pages.length;
+    setupOpen = false;
     save();
     render();
   }
-  function goTo(i) { state.page = i; save(); render(); }
+  function goTo(i) { state.page = i; setupOpen = false; save(); render(); }
 
   // ---- checklist logic ----
 
@@ -391,8 +396,7 @@
             <button class="pbtn grn" id="mToggle">⏯</button>
             <button class="pbtn" id="mNext">⏭</button>
             <button class="minibtn grn" id="mQuick">${quick ? '▶ ' + esc(quick.name) : '＋ PLAYLIST'}</button>
-            <button class="minibtn stack ${keepAwake ? 'on' : ''}" id="mKeep">KEEP AWAKE <span class="krow"><span class="lamp"></span><span class="kstate">${keepAwake ? 'ON' : 'OFF'}</span></span></button>
-            <button class="minibtn warn" id="mLogout">✕</button>
+            <button class="minibtn" id="mSetup">⚙ SETUP</button>
           </div>
           ${musicPanel === 'tracklist'
             ? `<div class="notes">
@@ -408,23 +412,41 @@
                  </div>
                </div>`
             : notesEditorHtml('mNotes', 'mNotesReset', 'NOTES — SAVED ON THIS PHONE')}
-        </div>`;
+        </div>
+        ${!setupOpen ? '' : `
+        <div class="overlay" id="mSetupOv">
+          <div class="setup">
+            <div class="setuphead">MUSIC SETUP</div>
+            <button class="minibtn lamped ${keepAwake ? 'on' : ''}" id="mKeep"><span class="lamp"></span>KEEP AWAKE <span class="kstate">${keepAwake ? 'ON' : 'OFF'}</span></button>
+            <button class="minibtn warn" id="mLogout">✕ DISCONNECT SPOTIFY</button>
+            <button class="minibtn cyn" id="mSetupClose">CLOSE</button>
+          </div>
+        </div>`}`;
       $('#mPrev').addEventListener('click', () => spCmd('prev', true));
       $('#mNext').addEventListener('click', () => spCmd('next', true));
       $('#mToggle').addEventListener('click', () => spCmd('toggle'));
       $('#mQuick').addEventListener('click', quickPlay);
-      $('#mKeep').addEventListener('click', () => {
-        setKeepAwake(!keepAwake);
-        render();
-        // Same words as the button, and "NOW" makes clear the toast is
-        // reporting the state you just switched into, not an instruction.
-        if (keepAwake) { toast('KEEP AWAKE NOW ON — TESTING…'); doKeepAlive(); }
-        else toast('KEEP AWAKE NOW OFF');
-      });
-      $('#mLogout').addEventListener('click', () => {
-        Spotify.logout();
-        render();
-      });
+      $('#mSetup').addEventListener('click', () => { setupOpen = true; render(); });
+      if (setupOpen) {
+        $('#mKeep').addEventListener('click', () => {
+          setKeepAwake(!keepAwake);
+          render();
+          // Same words as the button, and "NOW" makes clear the toast is
+          // reporting the state you just switched into, not an instruction.
+          if (keepAwake) { toast('KEEP AWAKE NOW ON — TESTING…'); doKeepAlive(); }
+          else toast('KEEP AWAKE NOW OFF');
+        });
+        $('#mLogout').addEventListener('click', () => {
+          setupOpen = false;
+          Spotify.logout();
+          render();
+        });
+        $('#mSetupClose').addEventListener('click', () => { setupOpen = false; render(); });
+        // a tap on the dimmed backdrop (outside the panel) also closes
+        $('#mSetupOv').addEventListener('click', e => {
+          if (e.target.id === 'mSetupOv') { setupOpen = false; render(); }
+        });
+      }
       if (musicPanel === 'tracklist') {
         nowShown = null; // header was just rebuilt — force the next refresh to draw
         bindScroll('mListUp', 'mListDown', '#mList');
@@ -670,7 +692,7 @@
         pl.repeat === 'track'
           ? '<li class="tldim">UP NEXT — repeat-1 is on, one track loops</li>'
         : needScope
-          ? '<li class="tldim">To show the playlist: tap ✕ then CONNECT SPOTIFY once (new permission)</li>'
+          ? '<li class="tldim">To show the playlist: ⚙ SETUP → DISCONNECT, then CONNECT once (new permission)</li>'
         : pl.contextUri ? ''
         : '<li class="tldim">UP NEXT — not playing from a playlist</li>';
       list.innerHTML = head + pl.tracks.map(t => `
