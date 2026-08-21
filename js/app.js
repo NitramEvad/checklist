@@ -35,6 +35,28 @@
   let keepAwake = localStorage.getItem('pfc.keepawake') === '1';
   const setKeepAwake = v => { keepAwake = v; localStorage.setItem('pfc.keepawake', v ? '1' : '0'); };
 
+  // Quick-start playlist for the MUSIC page's ▶ button: one tap starts the
+  // pilot's own playlist playing on the phone. Seeded from QUICKPLAY_DEFAULT
+  // in js/checklists.js; a link pasted on the phone (stored locally) wins.
+  const QUICK_KEY = 'pfc.quickplay.v1';
+  const QUICK_RE = /(?:open\.spotify\.com\/(?:[a-z-]+\/)?(playlist|album)\/|spotify:(playlist|album):)([A-Za-z0-9]+)/;
+  const parseQuick = (link, name) => {
+    const m = String(link || '').match(QUICK_RE);
+    if (!m) return null;
+    const type = m[1] || m[2];
+    return { uri: `spotify:${type}:${m[3]}`, name: (name || type).toUpperCase(), link };
+  };
+  function getQuick() {
+    try {
+      const v = JSON.parse(localStorage.getItem(QUICK_KEY));
+      if (v && v.uri) return v;
+    } catch (e) {}
+    return (typeof QUICKPLAY_DEFAULT === 'object' && QUICKPLAY_DEFAULT)
+      ? parseQuick(QUICKPLAY_DEFAULT.link, QUICKPLAY_DEFAULT.name) : null;
+  }
+  const setQuick = q => q ? localStorage.setItem(QUICK_KEY, JSON.stringify(q))
+                          : localStorage.removeItem(QUICK_KEY);
+
   // Notes: on-device edits (localStorage) take priority over NOTES_DEFAULT.
   const NOTES_KEY = 'pfc.notes.v1';
   const DEFAULT_NOTES = (typeof NOTES_DEFAULT === 'string') ? NOTES_DEFAULT : '';
@@ -361,12 +383,14 @@
 
   function renderMusic(c) {
     if (Spotify.connected()) {
+      const quick = getQuick();
       c.innerHTML = `
         <div class="player">
           <div class="pleft">
             <button class="pbtn" id="mPrev">⏮</button>
             <button class="pbtn grn" id="mToggle">⏯</button>
             <button class="pbtn" id="mNext">⏭</button>
+            <button class="minibtn grn" id="mQuick">${quick ? '▶ ' + esc(quick.name) : '＋ PLAYLIST'}</button>
             <button class="minibtn warn" id="mLogout">✕</button>
           </div>
           ${musicPanel === 'tracklist'
@@ -388,6 +412,7 @@
       $('#mPrev').addEventListener('click', () => spCmd('prev', true));
       $('#mNext').addEventListener('click', () => spCmd('next', true));
       $('#mToggle').addEventListener('click', () => spCmd('toggle'));
+      $('#mQuick').addEventListener('click', quickPlay);
       $('#mLogout').addEventListener('click', () => {
         Spotify.logout();
         render();
@@ -515,6 +540,54 @@
     }
   }
 
+  // ---- quick-start playlist (the ▶ FLIGHT button) ----
+
+  // Tap = start the pinned playlist on the phone (waking an idle-but-listed
+  // device if needed). If that playlist is already playing, the tap instead
+  // offers to change the pinned link — the one moment the button has no other
+  // job, so a mid-flight tap can never open a keyboard by surprise.
+  async function quickPlay() {
+    if (!navigator.onLine) { toast('NEED INTERNET TO CONTROL SPOTIFY'); return; }
+    let quick = getQuick();
+    if (quick) {
+      let s = null;
+      try { s = await Spotify.nowPlaying(); } catch (e) { /* just try to start it */ }
+      if (s && s.context === quick.uri) {
+        if (!s.playing) { spCmd('toggle'); return; } // right playlist, paused → resume
+        quick = quickSetup(quick);                   // already playing → offer change
+      }
+    } else {
+      quick = quickSetup(null);
+    }
+    if (!quick) return;
+    try {
+      toast('STARTING ' + quick.name + '…');
+      await Spotify.playContext(quick.uri);
+      setTimeout(refreshNowPlaying, 700);
+      setTimeout(refreshPlaylist, 900);
+    } catch (e) { toast(spErrMsg(e)); }
+  }
+
+  // One-time (or change-of-heart) setup: paste the playlist's share link.
+  // Blank reverts to the QUICKPLAY_DEFAULT from js/checklists.js (if any).
+  function quickSetup(cur) {
+    const v = prompt(
+      'Spotify playlist link for this button\n(in Spotify: Share → Copy link)' +
+      (cur ? '\nLeave blank to reset:' : ':'),
+      cur ? cur.link : '');
+    if (v === null) return null;                              // cancelled
+    if (!v.trim()) { setQuick(null); render(); return null; } // back to default
+    const q = parseQuick(v.trim(), null);
+    if (!q) { toast("THAT ISN'T A SPOTIFY PLAYLIST LINK"); return null; }
+    setQuick(q);
+    render();
+    // Best-effort real name for the label (some lists refuse API reads).
+    Spotify.contextName(q.uri.split(':')[1], q.uri.split(':')[2])
+      .then(n => { if (n) { q.name = n.toUpperCase(); setQuick(q); render(); } })
+      .catch(() => {});
+    return q;
+  }
+
   // Keeps the track list's "now playing" header + highlight in sync. Only runs
   // while the TRACKLIST panel is visible; no-op otherwise.
   let curUri = null;
@@ -586,7 +659,11 @@
         return;
       }
       curUri = pl.current;
-      list.innerHTML = pl.tracks.map(t => `
+      // Queue fallback (no readable playlist context): label it so a pile of
+      // autoplay recommendations can't be mistaken for one of your playlists.
+      const head = pl.queue
+        ? '<li class="tldim">UP NEXT — not playing from a playlist</li>' : '';
+      list.innerHTML = head + pl.tracks.map(t => `
         <li data-uri="${esc(t.uri)}" class="${t.uri === pl.current ? 'cur' : ''}">
           <span class="tname">${esc(t.name)}</span>
           <span class="tart">${esc(t.artist)}</span>
@@ -649,7 +726,8 @@
         const cls = batt.level < 0.30 ? 'red' : batt.level < 0.90 ? 'amber' : 'green';
         return { text: Math.round(batt.level * 100) + '%', cls };
       }
-      if (key === 'charging') return { text: batt.charging ? 'CHG' : 'ON BATT', cls: batt.charging ? 'green' : 'amber' };
+      // red when unplugged — on the deck the phone should be on the powerbank
+      if (key === 'charging') return { text: batt.charging ? 'CHG' : 'ON BATT', cls: batt.charging ? 'green' : 'red' };
       return null;
     }
     return { init, onChange: f => subs.push(f), value };

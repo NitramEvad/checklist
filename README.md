@@ -22,7 +22,15 @@ screen width, XCTrack's own widgets filling the rest).
   and the Spotify TRACKLIST** (middle rail button). The track list shows the
   current playlist with a **now-playing header** and tap-to-jump; ▲/▼ scroll
   either panel. A track name too long for the header scrolls slowly back and
-  forth like a ticker rather than shoving the KEEP AWAKE button aside. The KEEP
+  forth like a ticker rather than shoving the KEEP AWAKE button aside.
+  The green **▶ quick-start button** under the transport controls starts your
+  own playlist with one tap (set it up by pasting the playlist's share link —
+  Spotify → Share → Copy link — either in `js/checklists.js` as
+  `QUICKPLAY_DEFAULT` or on the phone; tap the button while that playlist is
+  already playing to change or clear the phone's link). Note the track list can
+  only show playlists Spotify lets the API read: your own lists work, but
+  Spotify-made ones (Daily Mix, radio, editorial) don't — for those, and for
+  free play, the list falls back to the **UP NEXT** queue view. The KEEP
   AWAKE button shows the mode it is **currently in** — green lamp lit + "ON"
   while the keep-alive is running, dark lamp + "OFF" when it isn't. Spotify controls live *only* here, so the checklist pages stay
   focused on checklist items. **Playback control and the track list need

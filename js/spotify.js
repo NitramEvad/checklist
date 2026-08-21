@@ -167,7 +167,7 @@ const Spotify = (() => {
     await api('/me/player/play', 'PUT', body);
   }
 
-  // Returns { playing, track, uri } or null when no active device.
+  // Returns { playing, track, uri, context } or null when no active device.
   async function nowPlaying() {
     const res = await api('/me/player');
     if (res.status === 204) return null;
@@ -178,6 +178,7 @@ const Spotify = (() => {
       playing: !!j.is_playing,
       track: j.item.name + (artists ? ' — ' + artists : ''),
       uri: j.item.uri,
+      context: (j.context && j.context.uri) || null,
     };
   }
 
@@ -196,23 +197,53 @@ const Spotify = (() => {
       const path = ctx.type === 'playlist'
         ? `/playlists/${id}/tracks?limit=100&fields=items(track(uri,name,artists(name)))`
         : `/albums/${id}/tracks?limit=50`;
-      const d = await (await api(path)).json();
-      const raw = ctx.type === 'playlist' ? (d.items || []).map(i => i.track) : (d.items || []);
-      return {
-        contextUri: ctx.uri,
-        current,
-        tracks: raw.filter(Boolean).map(t => ({ uri: t.uri, name: t.name, artist: artistsOf(t) })),
-      };
+      try {
+        const d = await (await api(path)).json();
+        const raw = ctx.type === 'playlist' ? (d.items || []).map(i => i.track) : (d.items || []);
+        return {
+          contextUri: ctx.uri,
+          current,
+          tracks: raw.filter(Boolean).map(t => ({ uri: t.uri, name: t.name, artist: artistsOf(t) })),
+        };
+      } catch (e) {
+        // Spotify refuses API reads of some playlists (its own editorial /
+        // algorithmic ones, for newer dev apps) — degrade to the queue view
+        // rather than showing an error while music is audibly playing.
+      }
     }
 
-    // Fallback: the up-next queue (not tied to a context).
+    // Fallback: the up-next queue (not tied to a readable context).
     const q = await (await api('/me/player/queue')).json();
     const list = [q.currently_playing, ...(q.queue || [])].filter(Boolean);
     return {
       contextUri: null,
       current,
+      queue: true,
       tracks: list.map(t => ({ uri: t.uri, name: t.name, artist: artistsOf(t) })),
     };
+  }
+
+  // Start playing a whole playlist/album by its context URI. If the API says
+  // there's no active device, wake an idle-but-listed one the way skip()
+  // does — but here the play command itself can carry the device target.
+  async function playContext(contextUri) {
+    const body = { context_uri: contextUri };
+    try {
+      await api('/me/player/play', 'PUT', body);
+    } catch (e) {
+      if (e.message !== 'NO_DEVICE') throw e;
+      const dev = await pickDevice();
+      if (!dev) throw new Error('NO_DEVICE');
+      await api('/me/player/play?device_id=' + dev.id, 'PUT', body);
+    }
+  }
+
+  // Best-effort display name of a playlist/album (some refuse API reads —
+  // see playlist()); throws on failure, callers fall back to a generic label.
+  async function contextName(type, id) {
+    const path = type === 'playlist' ? `/playlists/${id}?fields=name` : `/albums/${id}`;
+    const j = await (await api(path)).json();
+    return (j && j.name) || null;
   }
 
   // Keep-alive: send a harmless, inaudible command to the active device so its
@@ -235,6 +266,6 @@ const Spotify = (() => {
     connected: () => !!cfg.refresh,
     clientId: () => cfg.clientId || '',
     login, logout, handleRedirect,
-    toggle, next, prev, nowPlaying, playlist, playAt, keepAlive,
+    toggle, next, prev, nowPlaying, playlist, playAt, playContext, contextName, keepAlive,
   };
 })();

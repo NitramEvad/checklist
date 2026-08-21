@@ -24,9 +24,10 @@ a service worker. Do not add a bundler/framework.
   ⟳ update button), `<main>` (`#content` + right `#rail` of buttons). No footer.
 - `css/style.css` — all styling. Theme vars at top (`--bg/--grn/--amb/--cyn/
   --red …`) plus `--cam-inset` (left margin to clear the phone camera).
-- `js/checklists.js` — **user-editable content**: `CHECKLISTS` array (the pages)
-  and `NOTES_DEFAULT` (music-page notes seed). The pilot edits this file often,
-  sometimes directly on `main` (see Git workflow).
+- `js/checklists.js` — **user-editable content**: `CHECKLISTS` array (the
+  pages), `NOTES_DEFAULT` (music-page notes seed) and `QUICKPLAY_DEFAULT`
+  (quick-start playlist seed). The pilot edits this file often, sometimes
+  directly on `main` (see Git workflow).
 - `js/app.js` — all app logic (IIFE). Pages, rendering, state, live readings,
   flight data, music panel, service-worker registration, force-update.
 - `js/spotify.js` — Spotify Web API client (Auth Code + PKCE, no server/secret).
@@ -82,6 +83,15 @@ words ("KEEP AWAKE NOW ON/OFF") so the two can't be read as contradicting each
 other, and `.kstate` reserves room for the longer word so the button never
 resizes. Keep that pattern for any future mode toggle whose label states state.
 
+The green **▶ quick-start button** (`#mQuick`, under ⏭ in the transport
+column) starts the pilot's pinned playlist in one tap via
+`Spotify.playContext()` (wakes an idle-but-listed device). Pin sources:
+`QUICKPLAY_DEFAULT` in `js/checklists.js` (the pilot-editable seed — currently
+their "Flight" playlist), overridden by a link pasted on the phone
+(`pfc.quickplay.v1`). Tapping while the pinned list is already playing opens
+the change/clear prompt (the only moment a tap has no other job); tapping
+while it's paused resumes it.
+
 ### Offline & updates (important — was a recurring pain)
 - `sw.js` is **network-first** and fetches with `cache: 'no-cache'` so it
   revalidates every file with the server (GitHub Pages' `max-age` otherwise
@@ -119,6 +129,12 @@ in code; they're platform constraints):**
 4. **Can't launch the Spotify app** from XCTrack's WebView (it blocks
    `spotify://` and `intent://`), so there is intentionally no "open Spotify"
    button.
+5. **Spotify-owned playlists are API-unreadable** for newer dev apps (Daily
+   Mix, radio, editorial lists return 404/403 on `/playlists/{id}` since the
+   Nov 2024 API restrictions). `Spotify.playlist()` therefore degrades to the
+   up-next queue view (marked `queue: true`, rendered with an "UP NEXT" label)
+   instead of erroring while music is audibly playing. User-created playlists
+   read fine.
 
 ## Dev & test workflow
 
@@ -165,9 +181,10 @@ size before committing (Chromium is preinstalled at `/opt/pw-browsers/chromium`;
 
 ## localStorage keys
 `pfc.state.v1` (page/checks/timer), `pfc.notes.v1` (notes text),
-`pfc.musicpanel` (notes|tracklist), `pfc.keepawake` (0|1), `pfc.altunit`
-(auto|m|ft), `pfc.wx.v1` (cached QNH/temp + manual QNH), `pfc.spotify.v1`
-(Spotify client id + tokens).
+`pfc.musicpanel` (notes|tracklist), `pfc.keepawake` (0|1), `pfc.quickplay.v1`
+(pinned quick-start playlist `{uri, name, link}` — overrides
+`QUICKPLAY_DEFAULT`), `pfc.altunit` (auto|m|ft), `pfc.wx.v1` (cached QNH/temp
++ manual QNH), `pfc.spotify.v1` (Spotify client id + tokens).
 
 ## Open / recent items
 - **KEEP AWAKE** keep-alive is experimental and awaiting the pilot's real-device

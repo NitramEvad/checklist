@@ -9,7 +9,7 @@
 //        phone shown just left of the target, which turns green when it
 //        matches. Available "live" keys:
 //          "battery"  → actual battery %  (green ≥ 95%)
-//          "charging" → CHG / ON BATT     (green when charging)
+//          "charging" → CHG / ON BATT     (green charging, red on battery)
 //          "qnh"      → current QNH in hPa (from the FLIGHT DATA page —
 //                       the auto weather value, or your hand-set one)
 //  Keep it to ~5–9 items per page so text stays big and readable
@@ -161,3 +161,17 @@ LEKHAMPTON->CORFE
 12. -> Sturminster Newton
 13. Wareham
 `;
+
+// ============================================================
+//  QUICK-START PLAYLIST — the ▶ button on the MUSIC page.
+//  Paste any Spotify playlist/album share link (in Spotify:
+//  Share → Copy link) and give it a short button label. One tap
+//  on the deck starts it playing on the phone. A link pasted on
+//  the phone itself (tap the button while this playlist is
+//  already playing) overrides this default until cleared.
+// ============================================================
+
+const QUICKPLAY_DEFAULT = {
+  name: "FLIGHT",
+  link: "https://open.spotify.com/playlist/1sslNIDg5IydUiio1o5v27",
+};

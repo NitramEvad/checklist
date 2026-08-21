@@ -414,7 +414,15 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   border-radius: 12px;
 }
 .pbtn.grn { border-color: var(--grn); color: var(--grn); }
-.pleft .minibtn { flex: 0 0 auto; text-align: center; }
+.pleft .minibtn {
+  flex: 0 0 auto;
+  text-align: center;
+  min-width: 0;              /* long pinned-playlist names ellipsise… */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;       /* …instead of wrapping the narrow column */
+}
+.minibtn.grn { border-color: var(--grn); color: var(--grn); }
 
 .tracklist {
   list-style: none;
