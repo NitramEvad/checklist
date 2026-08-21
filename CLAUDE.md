@@ -106,7 +106,10 @@ while it's paused resumes it.
 
 Uses the Web API as a **remote control** of the Spotify app already playing on
 the phone (it does not stream audio). PKCE, no server. Scopes:
-`user-read-playback-state user-modify-playback-state`. Setup: pilot registers a
+`user-read-playback-state user-modify-playback-state playlist-read-private
+playlist-read-collaborative` (the playlist-read pair lets the track list show
+the pilot's private playlists; scopes are granted at connect time, so adding
+one needs a one-time ✕ → CONNECT on the phone). Setup: pilot registers a
 free Spotify dev app, redirect URI = the site URL, pastes the Client ID on the
 MUSIC page. Tokens auto-refresh.
 
@@ -129,12 +132,17 @@ in code; they're platform constraints):**
 4. **Can't launch the Spotify app** from XCTrack's WebView (it blocks
    `spotify://` and `intent://`), so there is intentionally no "open Spotify"
    button.
-5. **Spotify-owned playlists are API-unreadable** for newer dev apps (Daily
-   Mix, radio, editorial lists return 404/403 on `/playlists/{id}` since the
-   Nov 2024 API restrictions). `Spotify.playlist()` therefore degrades to the
-   up-next queue view (marked `queue: true`, rendered with an "UP NEXT" label)
-   instead of erroring while music is audibly playing. User-created playlists
-   read fine.
+5. **Some playlists are API-unreadable**: Spotify-owned ones (Daily Mix,
+   radio, editorial — 404/403 on `/playlists/{id}` since the Nov 2024 API
+   restrictions) always; the pilot's own *private* lists too until they
+   reconnect with the playlist-read scopes. `Spotify.playlist()` therefore
+   degrades to the up-next queue view (marked `queue: true`, honest "UP NEXT —
+   …" label naming the reason) instead of erroring while music is audibly
+   playing. The fallback still carries `contextUri`, so tap-to-jump plays
+   within the real context; a context-free tap sends the whole visible queue
+   (never one bare URI — a one-track context stops after the song and makes
+   `/me/player/queue` report the current track over and over, which the
+   fallback also dedupes).
 
 ## Dev & test workflow
 

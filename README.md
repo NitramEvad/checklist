@@ -28,9 +28,12 @@ screen width, XCTrack's own widgets filling the rest).
   Spotify → Share → Copy link — either in `js/checklists.js` as
   `QUICKPLAY_DEFAULT` or on the phone; tap the button while that playlist is
   already playing to change or clear the phone's link). Note the track list can
-  only show playlists Spotify lets the API read: your own lists work, but
-  Spotify-made ones (Daily Mix, radio, editorial) don't — for those, and for
-  free play, the list falls back to the **UP NEXT** queue view. The KEEP
+  only show playlists Spotify lets the API read: your own lists work (private
+  ones after a one-time reconnect — tap ✕ then CONNECT SPOTIFY — to grant the
+  playlist-read permission), but Spotify-made ones (Daily Mix, radio,
+  editorial) never do — for those, and for free play, the list falls back to
+  the **UP NEXT** queue view (the label says why). Tapping a track always
+  keeps the rest of the queue/playlist coming. The KEEP
   AWAKE button shows the mode it is **currently in** — green lamp lit + "ON"
   while the keep-alive is running, dark lamp + "OFF" when it isn't. Spotify controls live *only* here, so the checklist pages stay
   focused on checklist items. **Playback control and the track list need

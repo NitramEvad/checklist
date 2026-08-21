@@ -13,7 +13,11 @@
 
 const Spotify = (() => {
   const LS = 'pfc.spotify.v1';
-  const SCOPES = 'user-read-playback-state user-modify-playback-state';
+  // The playlist-read scopes let the track list show the pilot's own private
+  // playlists; granted only when (re-)connecting, so adding one here needs a
+  // one-time disconnect ✕ → CONNECT on the phone to take effect.
+  const SCOPES = 'user-read-playback-state user-modify-playback-state ' +
+                 'playlist-read-private playlist-read-collaborative';
 
   let cfg = {};
   try { cfg = JSON.parse(localStorage.getItem(LS) || '{}'); } catch (e) { cfg = {}; }
@@ -160,11 +164,21 @@ const Spotify = (() => {
     await api('/me/player/' + (j.is_playing ? 'pause' : 'play'), 'PUT');
   }
 
-  // Play a specific track. Within a playlist/album we pass its context so
-  // the queue that follows is preserved; otherwise we play the bare URI.
-  async function playAt(uri, contextUri) {
-    const body = contextUri ? { context_uri: contextUri, offset: { uri } } : { uris: [uri] };
-    await api('/me/player/play', 'PUT', body);
+  // Play a specific track. Within a playlist/album we pass its context so the
+  // queue that follows is preserved — even a context we can't *read* (see
+  // playlist()) can still be jumped within. Without a context we pass the
+  // whole visible list (offset at the tapped track): playing one bare URI
+  // would strand playback in a one-track context that stops after the song
+  // and makes the queue endpoint report that track over and over.
+  async function playAt(uri, contextUri, uris) {
+    const listBody = (uris && uris.length > 1) ? { uris, offset: { uri } } : { uris: [uri] };
+    if (!contextUri) { await api('/me/player/play', 'PUT', listBody); return; }
+    try {
+      await api('/me/player/play', 'PUT', { context_uri: contextUri, offset: { uri } });
+    } catch (e) {
+      // e.g. the tapped track was hand-queued and isn't in the context
+      await api('/me/player/play', 'PUT', listBody);
+    }
   }
 
   // Returns { playing, track, uri, context } or null when no active device.
@@ -183,8 +197,11 @@ const Spotify = (() => {
   }
 
   // The current playlist/album as a selectable list, or (if playback isn't
-  // in a playlist context) the up-next queue. Returns
-  //   { contextUri, current, tracks: [{uri, name, artist}] }  or null.
+  // in a playlist context, or the context refuses API reads) the up-next
+  // queue, marked queue: true (+ repeat state). Returns
+  //   { contextUri, current, queue?, repeat?, tracks: [{uri, name, artist}] }
+  // or null. contextUri is set whenever playback has a context — even in
+  // queue mode, where it lets callers jump within an unreadable context.
   async function playlist() {
     const res = await api('/me/player');
     if (res.status === 204) return null;
@@ -212,14 +229,25 @@ const Spotify = (() => {
       }
     }
 
-    // Fallback: the up-next queue (not tied to a readable context).
+    // Fallback: the up-next queue. contextUri still carries the playing
+    // context (when there is one) so tap-to-jump can stay inside it even
+    // though its track list can't be read.
     const q = await (await api('/me/player/queue')).json();
     const list = [q.currently_playing, ...(q.queue || [])].filter(Boolean);
+    // With repeat-one or a one-track context, Spotify pads the queue with the
+    // same track over and over — collapse those runs to a single row.
+    const tracks = [];
+    for (const t of list) {
+      if (!tracks.length || tracks[tracks.length - 1].uri !== t.uri) {
+        tracks.push({ uri: t.uri, name: t.name, artist: artistsOf(t) });
+      }
+    }
     return {
-      contextUri: null,
+      contextUri: (ctx && ctx.uri) || null,
       current,
       queue: true,
-      tracks: list.map(t => ({ uri: t.uri, name: t.name, artist: artistsOf(t) })),
+      repeat: (j && j.repeat_state) || 'off',
+      tracks,
     };
   }
 
