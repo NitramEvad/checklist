@@ -946,6 +946,9 @@
 
   async function init() {
     bindUI();
+    // Build stamp (js/version.js, deploy-time). Identifies the running
+    // version at a glance — the antidote to "did ⟳ actually update it?".
+    setTxt('#build', typeof BUILD === 'string' ? BUILD : '?');
     updateNet();
     Live.init();
     Live.onChange(updateHeaderBattery);

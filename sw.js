@@ -16,13 +16,14 @@
 //  only if you ever want to force every client to drop its cache.
 // ============================================================
 
-const CACHE_VERSION = 'pfc-v5';
+const CACHE_VERSION = 'pfc-v6';
 const NET_TIMEOUT = 2500; // ms before falling back to cache when online-but-slow
 
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
+  './js/version.js',
   './js/checklists.js',
   './js/spotify.js',
   './js/app.js',

@@ -22,6 +22,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Stamp build version (shown dimly in the app header)
+        run: |
+          printf "const BUILD = '%s %s';\n" \
+            "$(date -u +%d%b | tr '[:lower:]' '[:upper:]')" "${GITHUB_SHA::5}" > js/version.js
+          cat js/version.js
       - uses: actions/configure-pages@v5
         with:
           # Auto-enable GitHub Pages on first run — no manual settings step.

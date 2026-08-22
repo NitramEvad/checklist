@@ -101,6 +101,13 @@ header {
 }
 #net.ok  { color: var(--grn); }
 #net.off { color: var(--red); }
+/* deploy-time build stamp — deliberately faint; it's a debugging aid */
+#build {
+  font-size: clamp(9px, 2vh, 12px);
+  letter-spacing: 0.04em;
+  opacity: 0.55;
+  white-space: nowrap;
+}
 
 #btnRefresh {
   background: none;

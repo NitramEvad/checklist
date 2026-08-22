@@ -31,6 +31,9 @@ a service worker. Do not add a bundler/framework.
 - `js/app.js` — all app logic (IIFE). Pages, rendering, state, live readings,
   flight data, music panel, service-worker registration, force-update.
 - `js/spotify.js` — Spotify Web API client (Auth Code + PKCE, no server/secret).
+- `js/version.js` — build stamp shown faintly in the header (`#build`). The
+  repo copy says `dev`; the deploy workflow overwrites it with date + short
+  SHA, so the pilot (and you) can always tell which build the phone runs.
 - `sw.js` — service worker (network-first, revalidating). Bump `CACHE_VERSION`
   only to force a hard cache drop; not needed for normal edits.
 - `manifest.webmanifest`, `icon.svg` — PWA bits.
@@ -104,6 +107,9 @@ while it's paused resumes it.
   does NOT clear XCTrack's cookies/data (so other widgets stay logged in).
 - After deploying a change, the pilot uses ⟳ to pull it. A first-time bootstrap
   onto a new SW version can still need one XCTrack "Clear All Data".
+- The faint header build stamp (date + short SHA, from `js/version.js`) is how
+  to check what the phone is actually running — compare it against the latest
+  commit before debugging "it didn't update".
 
 ## Spotify integration — read before touching it
 
