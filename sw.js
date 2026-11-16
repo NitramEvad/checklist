@@ -16,7 +16,7 @@
 //  only if you ever want to force every client to drop its cache.
 // ============================================================
 
-const CACHE_VERSION = 'pfc-v6';
+const CACHE_VERSION = 'pfc-v7';
 const NET_TIMEOUT = 2500; // ms before falling back to cache when online-but-slow
 
 const ASSETS = [
@@ -29,6 +29,10 @@ const ASSETS = [
   './js/app.js',
   './manifest.webmanifest',
   './icon.svg',
+  './fonts/b612-400.woff2',
+  './fonts/b612-700.woff2',
+  './fonts/b612-mono-400.woff2',
+  './fonts/b612-mono-700.woff2',
 ];
 
 self.addEventListener('install', e => {

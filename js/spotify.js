@@ -184,19 +184,33 @@ const Spotify = (() => {
     }
   }
 
-  // Returns { playing, track, uri, context } or null when no active device.
+  // Returns { playing, track, uri, context, progress, duration, volume,
+  // canVolume } or null when no active device. progress/duration are ms.
+  // volume is 0–100 or null; canVolume is false for devices that don't let
+  // Spotify set their volume.
   async function nowPlaying() {
     const res = await api('/me/player');
     if (res.status === 204) return null;
     const j = await res.json();
     if (!j || !j.item) return null;
     const artists = artistsOf(j.item);
+    const dev = j.device || {};
+    const volume = typeof dev.volume_percent === 'number' ? dev.volume_percent : null;
     return {
       playing: !!j.is_playing,
       track: j.item.name + (artists ? ' — ' + artists : ''),
       uri: j.item.uri,
       context: (j.context && j.context.uri) || null,
+      progress: j.progress_ms || 0,
+      duration: j.item.duration_ms || 0,
+      volume,
+      canVolume: volume !== null && dev.supports_volume !== false,
     };
+  }
+
+  // Set the active device's volume (0–100).
+  async function setVolume(percent) {
+    await api('/me/player/volume?volume_percent=' + Math.round(percent), 'PUT');
   }
 
   // The current playlist/album as a selectable list, or (if playback isn't
@@ -303,5 +317,6 @@ const Spotify = (() => {
     hasScope: s => !!cfg.scope && cfg.scope.split(' ').includes(s),
     login, logout, handleRedirect,
     toggle, next, prev, nowPlaying, playlist, playAt, playContext, contextName, keepAlive,
+    setVolume,
   };
 })();

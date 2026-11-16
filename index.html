@@ -7,29 +7,39 @@
 <title>FlightDeck Checklist</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/b612-mono-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
+<!-- Title bar: page box · underlined title · progress · annunciator · page key -->
 <header>
+  <div id="pgnum" hidden></div>
   <div id="title">CHECKLIST</div>
-  <div id="dots"></div>
-  <div id="hstat">
-    <span id="build" title="build version"></span>
-    <span id="batt"></span>
-    <span id="clock">--:--</span>
-    <span id="net" title="online status">●</span>
-    <button id="btnRefresh" title="check for the latest version" aria-label="update to latest version">⟳</button>
-  </div>
+  <div id="prog"></div>
+  <div class="hspace"></div>
+  <div id="memo"></div>
+  <button id="hkey" hidden></button>
 </header>
 
 <main>
-  <section id="content"></section>
+  <div id="col">
+    <section id="content"></section>
+    <!-- Permanent data line, shown under every page -->
+    <footer id="dataline">
+      <span class="dl"><span class="dk">LCL</span><span class="dv" id="clock">--:--</span></span>
+      <span class="dl"><span class="dk">BAT</span><span class="dv lv-dim" id="batt">—</span></span>
+      <span class="dl"><span class="dk">QNH</span><span class="dv lv-dim" id="fQnh">—</span></span>
+      <span class="dspace"></span>
+      <span id="dots" role="img" aria-label="page progress"></span>
+      <span class="dl" id="buildWrap" hidden><span class="dk">BUILD</span><span class="dv white" id="build"></span></span>
+    </footer>
+  </div>
   <nav id="rail">
-    <button id="btnUp" class="railbtn" aria-label="previous page">▲</button>
+    <button id="btnUp" class="railbtn" aria-label="previous page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 21 19H3z"/></svg></button>
     <button id="btnCheck" class="railbtn check" aria-label="check item">CHECK</button>
     <button id="btnAdv" class="railbtn adv" aria-label="skip to next unchecked item">ADV</button>
-    <button id="btnDown" class="railbtn" aria-label="next page">▼</button>
+    <button id="btnDown" class="railbtn" aria-label="next page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19 21 5H3z"/></svg></button>
   </nav>
 </main>
 

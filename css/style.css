@@ -1,26 +1,73 @@
 /* ============================================================
-   FlightDeck Checklist — EICAS-style dark cockpit theme.
-   Designed for a landscape phone WebView (~600×410 CSS px when
-   the XCTrack widget takes 2/3 of an S22 Ultra screen), but
-   scales fluidly via vh/vw units.
+   FlightDeck Checklist — cockpit-display theme.
+
+   Design rules (keep these when adding anything):
+     • Pure black ground, hairline dividers, square keys.
+     • B612 / B612 Mono (open cockpit-display typefaces, self-hosted
+       in /fonts so they work offline). Lists and values are mono caps.
+     • Colour carries meaning and nothing else:
+         cyan  = to do / pilot-selected      green = done / normal
+         white = titles and the cursor       amber = caution
+         red   = warning                     grey  = labels, inactive
+       Never use amber or red for decoration or for "current item".
+
+   Everything is sized in rem. The root size is one scale factor
+   derived from the widget (designed at 650×450 = 16px), so the
+   whole layout shrinks or grows in proportion on any handset.
    ============================================================ */
+
+@font-face {
+  font-family: 'B612';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('../fonts/b612-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'B612';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('../fonts/b612-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'B612 Mono';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('../fonts/b612-mono-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'B612 Mono';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('../fonts/b612-mono-700.woff2') format('woff2');
+}
 
 :root {
   --bg:    #000000;
-  --panel: #0d1319;
-  --line:  #24323e;
+  --panel: #05080b;
+  --line:  #3d4d5a;
   --txt:   #e8eef2;
-  --dim:   #7d8a94;
-  /* Airbus ECAM-ish palette: green = normal, amber = action, cyan = data */
+  --dim:   #9aa7b1;
   --grn:   #24e34a;
   --amb:   #ffa000;
   --cyn:   #24d0e6;
   --red:   #ff4d4d;
+  --key:   #0b0f13; /* key face */
+  --keyb:  #5b6b78; /* key border, inactive marks */
 
-  /* Nudge the checklist boxes right so the front camera punch-hole doesn't
-     obscure them. ~5mm ≈ 20px; raise/lower to taste for your handset. */
+  --sans: 'B612', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'B612 Mono', ui-monospace, 'Roboto Mono', Menlo, Consolas, monospace;
+
+  /* Left margin that keeps content clear of the front camera punch-hole.
+     A physical size, so it is px and does not scale. ~5mm ≈ 22px. */
   --cam-inset: 22px;
 }
+
+/* 650×450 widget → 16px. min() keeps text inside a narrower widget too. */
+html { font-size: clamp(11px, min(3.555vh, 2.46vw), 20px); }
 
 * {
   margin: 0;
@@ -28,17 +75,18 @@
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
+[hidden] { display: none !important; }
 
 html, body { height: 100%; }
 
 body {
   background: var(--bg);
   color: var(--txt);
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--sans);
   height: 100vh;
   height: 100dvh;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
   touch-action: manipulation;
   user-select: none;
@@ -46,182 +94,179 @@ body {
 }
 
 button {
-  font-family: inherit;
+  font-family: var(--sans);
   color: inherit;
-  background: var(--panel);
-  border: 2px solid var(--line);
-  border-radius: 10px;
+  background: var(--key);
+  border: 2px solid var(--keyb);
+  border-radius: 4px;
   cursor: pointer;
 }
 button:active { background: #16303e; border-color: var(--cyn); }
 
-/* ---------- header ---------- */
+svg { fill: currentColor; }
+svg.s { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* state colours for any reading (set from js) */
+.lv-green { color: var(--grn) !important; }
+.lv-amber { color: var(--amb) !important; }
+.lv-red   { color: var(--red) !important; }
+.lv-cyan  { color: var(--cyn) !important; }
+.lv-dim   { color: var(--dim) !important; }
+.nodata   { color: var(--keyb) !important; } /* no reading: grey dash, never green */
+.white    { color: var(--txt) !important; }
+
+/* ---------- title bar ---------- */
 
 header {
+  height: 3.125rem;
   display: flex;
   align-items: center;
-  gap: 0.7em;
-  padding: 0.3em 0.6em;
-  border-bottom: 2px solid var(--line);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  font-size: clamp(14px, 3.6vh, 22px);
+  gap: 0.75rem;
+  padding: 0 6px 0 var(--cam-inset);
+  border-bottom: 1px solid var(--line);
+}
+
+#pgnum {
+  flex: none;
+  width: 1.625rem;
+  height: 1.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--dim);
+  color: var(--dim);
+  font: 700 1rem var(--mono);
 }
 
 #title {
-  color: #fff; /* ECAM system titles are white, underlined */
-  text-transform: uppercase;
-  text-decoration: underline;
-  text-decoration-color: var(--cyn);
-  text-underline-offset: 4px;
-  flex: 1;
   min-width: 0;
+  font-size: 1.3125rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  line-height: 1.625rem;
+  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  border-bottom: 2px solid var(--txt);
 }
 
-#dots { display: flex; gap: 0.35em; }
-.dot {
-  width: 0.55em;
-  height: 0.55em;
-  border-radius: 50%;
-  background: var(--line);
-}
-.dot.ok  { background: var(--grn); }
-.dot.cur { background: var(--cyn); outline: 2px solid var(--cyn); outline-offset: 2px; }
-.dot.cur.ok { background: var(--grn); outline-color: var(--grn); }
-
-#hstat {
-  display: flex;
-  gap: 0.6em;
-  align-items: center;
-  color: var(--dim);
-  font-variant-numeric: tabular-nums;
-}
-#net.ok  { color: var(--grn); }
-#net.off { color: var(--red); }
-/* deploy-time build stamp — deliberately faint; it's a debugging aid */
-#build {
-  font-size: clamp(9px, 2vh, 12px);
-  letter-spacing: 0.04em;
-  opacity: 0.55;
+#prog {
+  flex: none;
+  font: 1.125rem var(--mono);
+  color: var(--cyn);
   white-space: nowrap;
 }
+#prog.ok { color: var(--grn); }
 
-#btnRefresh {
-  background: none;
-  border: none;
-  color: var(--dim);
-  font-size: 1.15em;
-  line-height: 1;
-  padding: 0 0.1em;
-  cursor: pointer;
+.hspace { flex: 1; }
+
+/* Annunciator: the single most important message, on every page.
+   warn = red box, caution = amber box, advisory = amber, memo = green. */
+#memo {
+  flex: none;
+  font: 700 1rem var(--mono);
+  white-space: nowrap;
 }
-#btnRefresh:active { color: var(--cyn); }
+#memo.warn    { color: var(--red); border: 2px solid var(--red); padding: 0.3rem 0.6rem; }
+#memo.caution { color: var(--amb); border: 2px solid var(--amb); padding: 0.3rem 0.6rem; }
+#memo.advisory { color: var(--amb); }
+#memo.memo    { color: var(--grn); font-size: 0.9375rem; }
+
+/* the page key sits directly above the rail and matches its key width */
+#hkey {
+  flex: none;
+  width: calc(6.0625rem - 12px);
+  height: 2.75rem;
+  color: var(--dim);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.05;
+}
+#hkey.all { color: var(--amb); font-size: 0.8125rem; }
 
 /* ---------- main layout ---------- */
 
 main {
   display: grid;
-  grid-template-columns: 1fr clamp(84px, 15vw, 140px);
+  grid-template-columns: minmax(0, 1fr) 6.0625rem;
   min-height: 0;
 }
 
-#content {
+#col {
   min-width: 0;
   min-height: 0;
-  padding: 0.4em 0.7em;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+}
+
+#content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
+/* ---------- permanent data line ---------- */
+
+#dataline {
+  flex: none;
+  height: 1.875rem;
+  display: flex;
+  align-items: center;
+  gap: 1.125rem;
+  padding: 0 0.75rem 0 var(--cam-inset);
+  border-top: 1px solid var(--line);
+  color: var(--dim);
+  font: 0.9375rem var(--mono);
+  white-space: nowrap;
+}
+.dl { display: flex; gap: 0.45rem; }
+.dv { color: var(--grn); }
+.dspace { flex: 1; }
+
+/* page squares: square = checklist (fills green when complete),
+   round = other pages; the current page is larger with a white edge */
+#dots { display: flex; align-items: center; gap: 0.3rem; }
+.dot {
+  width: 0.5625rem;
+  height: 0.5625rem;
+  border: 2px solid var(--keyb);
+}
+.dot.aux { border-radius: 50%; }
+.dot.ok  { background: var(--grn); border-color: var(--grn); }
+.dot.cur { width: 0.75rem; height: 0.75rem; border-color: var(--txt); }
+
+/* ---------- rail ---------- */
+
 #rail {
   display: grid;
-  grid-auto-rows: 1fr; /* equal-height buttons whether 3 (data/music) or 4 (checklist) */
+  grid-auto-rows: minmax(0, 1fr); /* equal keys whether 2, 3 or 4 are showing */
   gap: 6px;
   padding: 6px;
-  border-left: 2px solid var(--line);
 }
 
 .railbtn {
-  font-size: clamp(20px, 5.5vh, 36px);
-  font-weight: 800;
-  border-radius: 14px;
-}
-.railbtn.check {
-  border-color: var(--grn);
-  color: var(--grn);
-  font-size: clamp(15px, 3.6vh, 25px);
-  letter-spacing: 0.05em;
-}
-.railbtn.check:active { background: #103822; }
-.railbtn.adv {
-  border-color: var(--cyn);
-  color: var(--cyn);
-  font-size: clamp(14px, 3.4vh, 24px);
-  letter-spacing: 0.06em;
-}
-.railbtn.adv:active { background: #10303e; }
-.railbtn.swap {
-  border-color: var(--cyn);
-  color: var(--cyn);
-  font-size: clamp(13px, 3.2vh, 22px);
-  line-height: 1.15;
-  letter-spacing: 0.04em;
-}
-.railbtn.swap:active { background: #10303e; }
-
-/* ---------- checklist page ---------- */
-
-.clhead {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5em;
-  padding-bottom: 0.25em;
-}
-.clbtns { display: flex; gap: 10px; flex: 0 0 auto; }
-/* header buttons keep their size and stay put whatever the text beside them */
-.clhead > .minibtn { flex: 0 0 auto; white-space: nowrap; }
-.prog {
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--dim);
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: clamp(13px, 3.2vh, 20px);
-}
-.prog.ok { color: var(--grn); }
-
-.minibtn {
-  font-size: clamp(11px, 2.6vh, 16px);
+  justify-content: center;
+  text-align: center;
+  font-size: 1.125rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  padding: 0.35em 0.9em;
-  color: var(--dim);
+  line-height: 1.15;
 }
-.minibtn.warn { border-color: #5a3200; color: var(--amb); }
-.minibtn.on { border-color: var(--grn); color: var(--grn); }
+.railbtn svg { width: 2.125rem; height: 2.125rem; }
+.railbtn.check { border-color: var(--grn); color: var(--grn); }
+.railbtn.check:active { background: #103822; }
+.railbtn.adv, .railbtn.swap, .railbtn.goto { border-color: var(--cyn); color: var(--cyn); }
+.railbtn.plain { color: var(--dim); font-size: 0.9375rem; }
 
-/* Status lamp for mode toggles whose label states the CURRENT mode (not the
-   action). Lit + filled = the mode is running; dark ring = it isn't — so the
-   button reads as an annunciator rather than as an instruction. */
-.minibtn.lamped { display: inline-flex; align-items: center; gap: 0.55em; }
-.lamp {
-  flex: 0 0 auto;
-  width: 0.7em;
-  height: 0.7em;
-  border-radius: 50%;
-  border: 2px solid currentColor;
-  background: transparent;
-}
-.minibtn.on .lamp { background: var(--grn); box-shadow: 0 0 6px var(--grn); }
-/* reserve room for the longer word so the button doesn't resize when toggled */
-.kstate { display: inline-block; min-width: 2.6em; text-align: center; }
+/* ---------- lists: checklist + status ---------- */
 
 ul.cl {
   list-style: none;
@@ -229,271 +274,307 @@ ul.cl {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  /* ECAM-style framed panel + camera inset on the left */
-  padding: 4px 4px 4px var(--cam-inset);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  padding: 0.25rem 0;
 }
 
+/* Every row has the same box (the cursor only colours the border), so text
+   never shifts when the cursor moves. Rows share the height up to a maximum,
+   so a short list sits at the top instead of stretching. */
 ul.cl li {
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 2.875rem;
   display: flex;
   align-items: center;
-  gap: 0.55em;
-  padding: 0 0.55em;
+  gap: 0.6rem;
+  margin: 0 6px 0 calc(var(--cam-inset) - 8px);
+  padding: 0 4px 0 6px;
   border: 2px solid transparent;
-  border-radius: 8px;
-  font-size: clamp(15px, 4.2vh, 27px);
-  font-weight: 600;
-  min-height: 0;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 1.1875rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--cyn);
   cursor: pointer;
 }
 
-ul.cl li .box {
-  flex: 0 0 1.5em;
-  height: 1.25em;
-  border: 2px solid var(--dim);
-  border-radius: 6px;
+ul.cl li .mk { flex: none; width: 1.125rem; height: 1.125rem; display: flex; }
+ul.cl li .mk svg { width: 100%; height: 100%; }
+ul.cl li .lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* challenge–response: CHALLENGE ········ RESPONSE */
+ul.cl li .leader {
+  flex: 1;
+  min-width: 0.8rem;
+  height: 0;
+  margin-top: 0.6rem;
+  border-bottom: 2px dotted currentColor;
+  opacity: 0.45;
+}
+ul.cl li .resp { flex: none; }
+
+/* live reading, shown just left of the target; coloured by its own state */
+ul.cl li .live { flex: none; font-weight: 700; color: var(--dim); }
+
+ul.cl li.done { color: var(--grn); }
+ul.cl li.active { border-color: var(--txt); font-weight: 700; }
+ul.cl li.active .mk { color: var(--txt); }
+
+/* status page: one row per checklist, plus the readiness banner */
+ul.cl.stl li { font-size: 1.0625rem; max-height: 2rem; }
+
+.banner {
+  flex: none;
+  height: 2.75rem;
+  margin: 0 0.75rem 0.5rem var(--cam-inset);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85em;
-  font-weight: 900;
-}
-ul.cl li .lbl {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 1;
-}
-
-/* challenge–response layout: Challenge ········ RESPONSE */
-ul.cl li .leader {
-  flex: 1;
-  min-width: 0.8em;
-  border-bottom: 3px dotted var(--line);
-  align-self: center;
-  transform: translateY(0.25em);
-  margin: 0 0.45em;
-}
-ul.cl li .resp {
-  white-space: nowrap;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  color: var(--cyn);
-}
-ul.cl li.active .resp { color: var(--amb); }
-ul.cl li.done   .resp { color: var(--grn); }
-
-/* live phone reading shown just left of the target value; colour-coded */
-ul.cl li .live {
-  white-space: nowrap;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  border: 2px solid var(--amb);
   color: var(--amb);
-  padding: 0 0.15em 0 0.3em;
+  font: 700 1.0625rem var(--mono);
+  white-space: nowrap;
+  text-transform: uppercase;
 }
-ul.cl li .live.lv-red   { color: var(--red); }
-ul.cl li .live.lv-amber { color: var(--amb); }
-ul.cl li .live.lv-green { color: var(--grn); }
+.banner.ok { border-color: var(--grn); color: var(--grn); }
 
-ul.cl li.done { color: var(--grn); }
-ul.cl li.done .box { border-color: var(--grn); color: var(--grn); }
-ul.cl li.done .lbl { opacity: 0.75; }
-
-ul.cl li.active {
-  border-color: var(--amb);
-  background: #1a1200;
-  color: #fff;
-}
-ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
-
-/* ---------- data page ---------- */
+/* ---------- flight data ---------- */
 
 .tiles {
   flex: 1;
   min-height: 0;
   display: grid;
-  /* 2 wide columns × 3 rows: fewer, larger boxes for easier reading */
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: 6px;
-  padding-left: var(--cam-inset); /* keep the left column clear of the camera */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
 }
 
 .tile {
-  background: var(--panel);
-  border: 2px solid var(--line);
-  border-radius: 10px;
-  padding: 0.3em 0.5em;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0.4rem 0.75rem 0.3rem 0.875rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
-  gap: 0.2em;
-  min-height: 0;
-  overflow: hidden;
+  gap: 0.125rem;
+  border-bottom: 1px solid var(--line);
 }
-.tile .tl {
-  color: var(--dim);
-  font-size: clamp(15px, 4vh, 24px);
+.tile:nth-child(odd) { border-right: 1px solid var(--line); padding-left: var(--cam-inset); }
+.tile:nth-last-child(-n+2) { border-bottom: 0; }
+.tile.tap { cursor: pointer; }
+.tile.tap:active { background: #0b1a22; }
+
+/* label + tag: white title, cyan tag for the mode/source */
+.tl {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-}
-.tile .tv {
-  font-size: clamp(30px, 11vh, 64px);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.02;
+  letter-spacing: 0.06em;
+  line-height: 1.125rem;
   white-space: nowrap;
-  color: var(--cyn);
 }
-.tile .tsub {
+.tag { color: var(--cyn); }
+
+/* value: green digits, cyan unit, small seconds */
+.tv {
+  display: flex;
+  align-items: baseline;
+  gap: 0.125rem;
+  font: 700 3.125rem/3.25rem var(--mono);
+  color: var(--grn);
+  white-space: nowrap;
+}
+/* small parts get a tight line box so they never make the row taller than
+   the main digits (which would push neighbouring tiles out of line) */
+.tv .tsec { font-size: 1.625rem; line-height: 1; }
+.tv .tu { margin-left: 0.4rem; font-size: 1.375rem; line-height: 1; color: var(--cyn); }
+.tv .gap { margin-left: 0.6rem; }
+
+.ts {
+  display: flex;
+  gap: 0.45rem;
+  min-height: 1.25rem; /* an empty line still holds its row, so tiles align */
+  font: 0.9375rem/1.25rem var(--mono);
   color: var(--dim);
-  font-size: clamp(14px, 3.4vh, 22px);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-.tile .trow { display: flex; gap: 8px; margin-top: 0.15em; }
-.tile .trow .minibtn { font-size: clamp(14px, 3.8vh, 24px); padding: 0.45em 1em; }
-#tileQnh, #tileAlt { cursor: pointer; }
-#tileQnh .tv.manual { color: var(--amb); } /* amber = hand-set QNH */
-.unittag {
-  font-size: 0.8em;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: var(--cyn);
+.ts .v { color: var(--grn); }
+
+/* Clock-style readouts use B612 rather than B612 Mono: its digits are the
+   same fixed width, but its colon is narrow — the mono colon sits in a full
+   cell and reads as "13: 34". */
+#clock, #dLocal, #dSec, #dUtc, #dTimer, #dTsec, #dSun, #mPos, #mDur { font-family: var(--sans); }
+
+.tvrow { display: flex; align-items: center; gap: 0.5rem; }
+.tvrow .tv { flex: 1; min-width: 0; }
+.tkey {
+  flex: none;
+  width: 3.5rem;
+  height: 2.75rem;
+  color: var(--dim);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
 
-.drow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6em;
-  padding-top: 0.35em;
-  padding-left: var(--cam-inset); /* align the GPS row under the tiles */
-  font-size: clamp(11px, 2.8vh, 16px);
+/* two readings sharing one tile (QNH | TEMP) */
+.tile.two { flex-direction: row; align-items: center; justify-content: flex-start; gap: 1rem; }
+.tile.two .tv { font-size: 2.75rem; }
+.tb { min-width: 0; display: flex; flex-direction: column; gap: 0.125rem; }
+.tb.tap { cursor: pointer; }
+
+/* ---------- systems synoptic ---------- */
+
+/* Cards are placed in % of this box and the flow lines are drawn in an SVG
+   stretched over it with the same coordinates, so they stay joined at any
+   size. Line colour = link state. */
+.syn { position: relative; flex: 1; min-height: 0; }
+.synl { position: absolute; inset: 0; width: 100%; height: 100%; }
+.synl line {
+  fill: none;
+  stroke: var(--grn);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
 }
-.dim { color: var(--dim); }
+.synl line.off { stroke: var(--amb); stroke-dasharray: 6 6; }
+.synl line.bad { stroke: var(--red); stroke-dasharray: 6 6; }
+.synl line.unk { stroke: var(--keyb); }
+
+.card {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.25rem;
+  text-align: center;
+  background: var(--bg);
+  border: 2px solid var(--grn);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.card.off { border-color: var(--amb); }
+.card.bad { border-color: var(--red); }
+.card.unk { border-color: var(--keyb); }
+.card .ct { font-size: 0.9375rem; font-weight: 700; letter-spacing: 0.04em; }
+.card .cv { font: 0.9375rem var(--mono); color: var(--grn); }
+.card .big { font: 700 1.75rem/2rem var(--mono); color: var(--grn); }
+
+.synlbl {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  color: var(--dim);
+  white-space: nowrap;
+}
 
 /* ---------- music page ---------- */
 
+/* not connected: one-time setup */
 .music {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.7em;
+  gap: 0.7rem;
+  padding: 0.5rem 0.75rem 0.5rem var(--cam-inset);
 }
-.music p {
-  color: var(--dim);
-  font-size: clamp(12px, 3vh, 17px);
-  line-height: 1.35;
+.music p { color: var(--dim); font-size: 0.9375rem; line-height: 1.35; }
+.music input {
+  width: 100%;
+  background: var(--panel);
+  border: 2px solid var(--keyb);
+  color: var(--cyn);
+  font: 1.125rem var(--mono);
+  padding: 0.5rem 0.6rem;
+  outline: none;
+  user-select: text;
+  -webkit-user-select: text;
 }
-.bigbtn {
-  font-size: clamp(20px, 6vh, 40px);
-  border-radius: 14px;
-  padding: 0.4em 0.7em;
+.music input:focus { border-color: var(--cyn); }
+.bigkey {
+  height: 3.5rem;
+  border-color: var(--grn);
+  color: var(--grn);
+  font-size: 1.3125rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
-.bigbtn.grn { border-color: var(--grn); color: var(--grn); }
 
-/* ---- connected player: stacked transport buttons + track list ---- */
-
+/* connected: transport column · now-playing + list (or notes) · scroll keys */
 .player {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: clamp(70px, 16vw, 110px) 1fr;
-  gap: 8px;
-  padding-left: var(--cam-inset); /* keep the transport buttons clear of the camera */
+  grid-template-columns: 6.25rem minmax(0, 1fr) 3.375rem;
+  gap: 0.5rem;
+  padding: 6px 6px 6px var(--cam-inset);
 }
-.pleft {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.pbtn {
-  flex: 1;
-  font-size: clamp(18px, 5vh, 30px);
-  border-radius: 12px;
-}
-.pbtn.grn { border-color: var(--grn); color: var(--grn); }
-.pleft .minibtn {
-  flex: 0 0 auto;
-  text-align: center;
-  min-width: 0;              /* long pinned-playlist names ellipsise… */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;       /* …instead of wrapping the narrow column */
-}
-.minibtn.grn { border-color: var(--grn); color: var(--grn); }
-.minibtn.cyn { border-color: var(--cyn); color: var(--cyn); }
 
-/* ⚙ SETUP overlay: keep-awake toggle + disconnect, off the main column */
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  background: rgba(0, 0, 0, 0.6);
+.pleft { min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+.pbtn {
+  flex: 1 1 0;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.setup {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 1em 1.2em;
+.pbtn svg { width: 2.5rem; height: 2.5rem; }
+.pbtn.grn { border-color: var(--grn); color: var(--grn); }
+
+/* small labelled key (FLIGHT, SETUP, RESET, dialog rows) */
+.minikey {
+  flex: none;
+  height: 2.75rem;
+  min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: min(420px, 78vw);
-}
-.setuphead {
-  color: var(--dim);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  font-size: clamp(12px, 3vh, 17px);
-  text-align: center;
-}
-/* room to hit with gloves — these are full-width rows, not header chips */
-.setup .minibtn {
-  font-size: clamp(15px, 4vh, 24px);
-  padding: 0.55em 1em;
+  align-items: center;
   justify-content: center;
-}
-
-.tracklist {
-  list-style: none;
-  flex: 1;          /* fill the panel beside the scroll buttons */
-  min-width: 0;
-  min-height: 0;
-  overflow-y: auto;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Now-playing header above the track list. Track names are often longer than
-   the strip, so the text shuttles slowly like a ticker (js sizes the travel);
-   the ▶/⏸ icon is held still on the left so the state is always readable. */
-.mnow {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 0.35em;
+  gap: 0.4rem;
+  padding: 0 0.4rem;
+  color: var(--dim);
+  font-size: 0.9375rem;
   font-weight: 700;
-  color: var(--cyn);
-  font-size: clamp(12px, 3vh, 18px);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
   white-space: nowrap;
   overflow: hidden;
 }
-.mnowicon { flex: 0 0 auto; }
+.minikey svg { flex: none; width: 0.875rem; height: 0.875rem; }
+.minikey .ell { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.minikey.grn  { border-color: var(--grn); color: var(--grn); }
+.minikey.cyn  { border-color: var(--cyn); color: var(--cyn); }
+.minikey.warn { color: var(--amb); }
+.minikey.on   { border-color: var(--grn); color: var(--grn); }
+
+.pmid { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 0.375rem; }
+
+/* Now-playing strip. Track names are often longer than the strip, so the
+   text shuttles slowly like a ticker (js sizes the travel); the play/pause
+   mark is held still on the left so the state is always readable. */
+.mnow {
+  flex: none;
+  height: 1.5rem;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--cyn);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.mnowicon { flex: none; display: flex; }
+.mnowicon svg { width: 0.875rem; height: 0.875rem; }
 .mnowclip {
   flex: 1;
   min-width: 0;
@@ -514,116 +595,185 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   0%, 18%   { transform: translateX(0); }
   82%, 100% { transform: translateX(var(--mshift, 0)); }
 }
+
+/* track position */
+.mprog {
+  flex: none;
+  height: 1.125rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--dim);
+  font: 0.875rem var(--mono);
+  white-space: nowrap;
+}
+.mprog .bar { flex: 1; height: 6px; background: var(--line); }
+.mprog .fill { width: 0; height: 100%; background: var(--grn); }
+#mPos { color: var(--grn); }
+
+/* volume */
+.mvol { flex: none; height: 2.75rem; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
+.vkey {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vkey svg { width: 1.375rem; height: 1.375rem; stroke-width: 3; }
+.vl { font-size: 0.875rem; font-weight: 700; letter-spacing: 0.06em; color: var(--dim); }
+.segs { flex: 1; display: flex; align-items: center; justify-content: space-between; }
+.seg { width: 0.875rem; height: 0.875rem; background: var(--line); }
+.seg.on { background: var(--grn); }
+#mVolN { min-width: 1.7rem; text-align: right; font: 700 0.9375rem var(--mono); color: var(--grn); }
+.mvol.na #mVolN, .mvol.na .vkey { color: var(--keyb); }
+
+.tracklist {
+  list-style: none;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  -webkit-overflow-scrolling: touch;
+}
 .tracklist li {
+  min-width: 0;
+  min-height: 3.125rem;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 1px;
-  padding: 0.4em 0.6em;
+  padding: 0.3rem 0.625rem;
   border-bottom: 1px solid var(--line);
   cursor: pointer;
-  min-width: 0;
 }
 .tracklist li:last-child { border-bottom: none; }
-.tracklist li:active { background: #16303e; }
-.tracklist li.tldim { color: var(--dim); cursor: default; }
-.tracklist .tname {
-  font-size: clamp(13px, 3.2vh, 19px);
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.tracklist .tart {
-  font-size: clamp(10px, 2.4vh, 14px);
+.tracklist li:active { background: #0b1a22; }
+.tracklist li.tldim {
+  min-height: 0;
   color: var(--dim);
+  font-size: 0.875rem;
+  cursor: default;
+}
+.tracklist .tname, .tracklist .tart {
+  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.tracklist .tname { font-size: 1rem; font-weight: 700; }
+.tracklist .tart  { font-size: 0.875rem; color: var(--dim); }
 .tracklist li.cur {
+  padding-left: calc(0.625rem - 4px);
   background: #0e2a17;
   border-left: 4px solid var(--grn);
 }
 .tracklist li.cur .tname { color: var(--grn); }
-.tracklist li.cur .tname::before { content: '▶ '; }
 
 /* notes shown read-only in the track-list area when tracks can't load */
-.tracklist li.tlnotes { cursor: default; display: block; }
+.tracklist li.tlnotes { display: block; cursor: default; }
 .tlnotes-h {
+  margin-bottom: 0.3rem;
   color: var(--cyn);
-  font-size: clamp(10px, 2.4vh, 14px);
+  font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  margin-bottom: 0.3em;
 }
 .tlnotes-b {
   white-space: pre-wrap;
-  font-size: clamp(12px, 3vh, 17px);
-  line-height: 1.35;
+  font: 1rem/1.4 var(--sans);
   color: var(--txt);
 }
 
-/* ---------- notes page ---------- */
-
-.notes {
+/* notes panel (typed text keeps its own case) */
+.nhead { flex: none; height: 2.75rem; display: flex; align-items: center; gap: 0.5rem; }
+.nlbl {
   flex: 1;
-  min-width: 0;   /* let long track names clip instead of widening the panel */
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--dim);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
-.notesbody {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  gap: 6px;
-}
+.nhead .minikey { width: 5rem; }
 .notesArea {
   flex: 1;
   min-width: 0;
   min-height: 0;
   resize: none;
-  background: var(--panel);
+  background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 0;
   color: var(--txt);
-  font-family: ui-monospace, "Roboto Mono", Menlo, Consolas, monospace;
-  font-size: clamp(14px, 3.6vh, 21px);
-  line-height: 1.4;
-  padding: 0.5em 0.7em;
+  /* proportional, not mono: in the mono face "143.725" reads as "143. 725" */
+  font: 1.125rem/1.4 var(--sans);
+  padding: 0.4rem 0.6rem;
   user-select: text;
   -webkit-user-select: text;
   white-space: pre-wrap;
 }
 .notesArea:focus { outline: none; border-color: var(--cyn); }
 
-/* ▲/▼ buttons to scroll the notes (touch-drag is unreliable in the WebView) */
-.nscroll {
-  flex: 0 0 auto;
+/* ▲/▼ keys to scroll the list or notes (touch-drag is unreliable in the WebView) */
+.nscroll { min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+.nbtn {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nbtn svg { width: 1.625rem; height: 1.625rem; }
+
+/* ---------- setup dialog ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.setup {
+  width: min(26rem, 78vw);
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-.nbtn {
-  width: clamp(40px, 9vw, 56px);
-  flex: 1;
-  font-size: clamp(18px, 5vh, 30px);
-  font-weight: 800;
-  border-radius: 10px;
-}
-.nbtn:active { background: #16303e; }
-
-.music input {
+  gap: 0.75rem;
+  padding: 1rem 1.2rem;
   background: var(--panel);
-  border: 2px solid var(--line);
-  border-radius: 10px;
-  color: var(--txt);
-  font-size: clamp(14px, 3.4vh, 20px);
-  padding: 0.5em 0.7em;
-  user-select: text;
-  -webkit-user-select: text;
+  border: 2px solid var(--keyb);
 }
+.setuphead {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.5rem;
+}
+/* full-width rows with room for gloves */
+.setup .minikey { height: 3.25rem; font-size: 1.1875rem; }
+
+/* Status lamp for mode toggles whose label states the CURRENT mode (not the
+   action). Lit + filled = the mode is running; dark ring = it isn't — so the
+   key reads as an annunciator rather than as an instruction. */
+.lamp {
+  flex: none;
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 2px solid currentColor;
+  background: transparent;
+}
+.minikey.on .lamp { background: var(--grn); box-shadow: 0 0 6px var(--grn); }
+/* reserve room for the longer word so the key doesn't resize when toggled */
+.kstate { display: inline-block; min-width: 2.6em; text-align: center; }
 
 /* ---------- toast ---------- */
 
@@ -632,12 +782,14 @@ ul.cl li.active .box { border-color: var(--amb); color: var(--amb); }
   left: 50%;
   bottom: 18%;
   transform: translateX(-50%);
-  background: #142430;
+  max-width: 90vw;
+  padding: 0.5rem 1.1rem;
+  background: #06141b;
   border: 2px solid var(--cyn);
-  border-radius: 10px;
-  padding: 0.5em 1.2em;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  font-size: clamp(13px, 3.2vh, 19px);
-  z-index: 50; /* above the ⚙ SETUP overlay (40) — feedback is never hidden */
+  color: var(--txt);
+  font: 700 1rem var(--mono);
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+  z-index: 50; /* above the setup dialog (40) — feedback is never hidden */
 }
